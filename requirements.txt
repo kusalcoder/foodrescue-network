@@ -6,6 +6,7 @@ python-dotenv==1.0.1
 # --- Phase 2: PostgreSQL Database Layer ---
 Flask-SQLAlchemy==3.1.1
 Flask-Migrate==4.0.7
+psycopg[binary]
 psycopg2-binary==2.9.9
 
 # --- Phase 3: Authentication ---
