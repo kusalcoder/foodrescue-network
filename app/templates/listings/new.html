@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}New Listing — FoodRescue Network{% endblock %}
+
+{% block content %}
+<section class="form-page" data-page="listing-form" data-mode="create">
+  <div id="guest-notice" class="alert alert--info" hidden>
+    <a href="{{ url_for('frontend.login_page') }}">Log in</a> as a provider to create a listing.
+  </div>
+
+  <div id="wrong-role-notice" class="alert alert--info" hidden>
+    Only provider accounts can create listings.
+  </div>
+
+  <div id="form-wrapper" hidden>
+    <a class="back-link" href="{{ url_for('frontend.my_listings_page') }}">&larr; Back to My Listings</a>
+    <h1>New Listing</h1>
+    <div id="form-alert"></div>
+
+    <form id="listing-form" novalidate>
+      <div class="form-field">
+        <label for="food_name">Food name</label>
+        <input type="text" id="food_name" name="food_name" required>
+        <p class="field-error" data-error-for="food_name"></p>
+      </div>
+
+      <div class="form-field">
+        <label for="description">Description</label>
+        <textarea id="description" name="description" rows="3"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="category">Category</label>
+          <select id="category" name="category" required>
+            <option value="">Select a category</option>
+            <option value="prepared_food">Prepared Food</option>
+            <option value="packaged_food">Packaged Food</option>
+            <option value="bakery">Bakery</option>
+            <option value="fruits">Fruits</option>
+            <option value="vegetables">Vegetables</option>
+            <option value="other">Other</option>
+          </select>
+          <p class="field-error" data-error-for="category"></p>
+        </div>
+
+        <div class="form-field">
+          <label for="quantity">Quantity</label>
+          <input type="number" id="quantity" name="quantity" min="0.01" step="0.01" required>
+          <p class="field-error" data-error-for="quantity"></p>
+        </div>
+
+        <div class="form-field">
+          <label for="quantity_unit">Unit</label>
+          <input type="text" id="quantity_unit" name="quantity_unit" placeholder="e.g. meals, kg, boxes" required>
+          <p class="field-error" data-error-for="quantity_unit"></p>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="available_date">Available date</label>
+          <input type="date" id="available_date" name="available_date" required>
+          <p class="field-error" data-error-for="available_date"></p>
+        </div>
+        <div class="form-field">
+          <label for="pickup_start_time">Pickup starts</label>
+          <input type="datetime-local" id="pickup_start_time" name="pickup_start_time" required>
+          <p class="field-error" data-error-for="pickup_start_time"></p>
+        </div>
+        <div class="form-field">
+          <label for="pickup_end_time">Pickup ends</label>
+          <input type="datetime-local" id="pickup_end_time" name="pickup_end_time" required>
+          <p class="field-error" data-error-for="pickup_end_time"></p>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="pickup_location">Pickup location</label>
+        <input type="text" id="pickup_location" name="pickup_location" placeholder="Street address" required>
+        <p class="field-error" data-error-for="pickup_location"></p>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="latitude">Latitude <span class="text-muted">(optional)</span></label>
+          <input type="number" id="latitude" name="latitude" step="any" placeholder="e.g. 39.799999">
+        </div>
+        <div class="form-field">
+          <label for="longitude">Longitude <span class="text-muted">(optional)</span></label>
+          <input type="number" id="longitude" name="longitude" step="any" placeholder="e.g. -89.644444">
+        </div>
+      </div>
+      <p class="text-muted form-hint">Provide both latitude and longitude, or leave both blank.</p>
+
+      <div class="form-field">
+        <label for="conditions">Pickup conditions <span class="text-muted">(optional)</span></label>
+        <textarea id="conditions" name="conditions" rows="2" placeholder="e.g. Pickup only. Keep refrigerated."></textarea>
+      </div>
+
+      <button type="submit" class="btn btn--primary" id="submit-btn">Create Listing</button>
+    </form>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/listing-form.js') }}"></script>
+{% endblock %}

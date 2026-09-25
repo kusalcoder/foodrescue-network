@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Register — FoodRescue Network{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+  <h1>Create an account</h1>
+  <p class="text-muted">
+    Register as a food provider (restaurant, grocer, caterer) or a
+    recipient organization (shelter, food bank, community group).
+  </p>
+
+  <div id="form-alert"></div>
+
+  <form id="register-form" novalidate>
+    <div class="form-field">
+      <label for="name">Name / Organization Name</label>
+      <input type="text" id="name" name="name" required maxlength="150" autocomplete="name">
+      <div class="field-error" data-error-for="name"></div>
+    </div>
+
+    <div class="form-field">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" required autocomplete="email">
+      <div class="field-error" data-error-for="email"></div>
+    </div>
+
+    <div class="form-field">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password">
+      <p class="text-muted" style="margin: 0.25rem 0 0; font-size: 0.85rem;">
+        At least 8 characters, with both letters and numbers.
+      </p>
+      <div class="field-error" data-error-for="password"></div>
+    </div>
+
+    <div class="form-field">
+      <label for="role">I am registering as a...</label>
+      <select id="role" name="role" required>
+        <option value="" disabled selected>Select one</option>
+        <option value="provider">Food Provider</option>
+        <option value="recipient">Recipient Organization</option>
+      </select>
+      <div class="field-error" data-error-for="role"></div>
+    </div>
+
+    <button type="submit" class="btn btn--primary" id="submit-btn">Create Account</button>
+  </form>
+
+  <p class="text-muted" style="margin-top: var(--space-4);">
+    Already have an account? <a href="{{ url_for('frontend.login_page') }}">Log in</a>
+  </p>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/auth-forms.js') }}"></script>
+{% endblock %}

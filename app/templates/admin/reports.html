@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Reports — FoodRescue Network{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div id="guest-notice" class="alert alert--info" hidden>
+  <a href="{{ url_for('frontend.login_page') }}">Log in</a> as an administrator to view reports.
+</div>
+
+<div id="wrong-role-notice" class="alert alert--info" hidden>
+  This page is for administrator accounts only.
+</div>
+
+<section id="reports-page" hidden>
+  <h1>Reports</h1>
+
+  <nav class="admin-subnav" aria-label="Admin">
+    <a href="{{ url_for('frontend.admin_verify_recipient_page') }}">Verify Recipient</a>
+    <a href="{{ url_for('frontend.admin_users_page') }}">Manage Users</a>
+    <a href="{{ url_for('frontend.admin_audit_log_page') }}">Audit Log</a>
+    <a href="{{ url_for('frontend.admin_reports_page') }}" class="is-active">Reports</a>
+  </nav>
+
+  <div id="page-alert"></div>
+
+  <p id="reports-loading" class="text-muted">Loading platform reports…</p>
+
+  <div id="reports-content" hidden>
+    <div id="stat-cards" class="stat-cards"></div>
+    <div id="breakdowns"></div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/admin-reports.js') }}"></script>
+{% endblock %}

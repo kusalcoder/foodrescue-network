@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}My Listings — FoodRescue Network{% endblock %}
+
+{% block content %}
+<section class="listings-page" data-page="my-listings">
+  <div id="guest-notice" class="alert alert--info" hidden>
+    <a href="{{ url_for('frontend.login_page') }}">Log in</a> as a provider to manage your listings.
+  </div>
+
+  <div id="wrong-role-notice" class="alert alert--info" hidden>
+    This page is for provider accounts. Recipients browse listings from the
+    <a href="{{ url_for('frontend.listings_page') }}">main listings feed</a> instead.
+  </div>
+
+  <div id="no-profile-notice" class="alert alert--info" hidden>
+    <p>You need a provider profile before you can create listings.</p>
+    <p class="text-muted">
+      Provider profile setup doesn't have a page yet (that's a later phase) —
+      for now, create one by sending a <code>POST /api/providers/profile</code>
+      request with your organization details. See <code>PHASE4_SETUP.md</code>
+      for a ready-to-run example.
+    </p>
+  </div>
+
+  <div id="dashboard" hidden>
+    <div class="listings-page__header listings-page__header--split">
+      <div>
+        <h1>My Listings</h1>
+        <p class="text-muted">Everything you've posted, regardless of status.</p>
+      </div>
+      <a class="btn btn--primary" href="{{ url_for('frontend.new_listing_page') }}">+ New Listing</a>
+    </div>
+
+    <div id="mine-alert"></div>
+    <p id="mine-loading" class="text-muted">Loading your listings…</p>
+    <p id="mine-empty" class="text-muted" hidden>
+      You haven't posted any listings yet.
+    </p>
+
+    <div id="mine-grid" class="cards listings-grid" hidden></div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/listings-mine.js') }}"></script>
+{% endblock %}

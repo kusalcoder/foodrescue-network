@@ -1,0 +1,144 @@
+/* ==========================================================================
+   FoodRescue Network — Listings feed + detail page (Phase 3)
+
+   Extends base.css's tokens/badges rather than redefining colors.
+   ========================================================================== */
+
+.listings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+/* ---------- Filter bar ---------- */
+
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.filter-bar__field {
+  margin-bottom: 0;
+  min-width: 180px;
+}
+
+.filter-bar__field--checkbox label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 500;
+}
+.filter-bar__field--checkbox input {
+  width: auto;
+}
+
+.filter-bar__actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+/* ---------- Listing cards ---------- */
+
+.listings-grid {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.listing-card {
+  display: block;
+  color: inherit;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.listing-card:hover {
+  text-decoration: none;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.listing-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.listing-card__top h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.listing-card__pickup {
+  font-size: 0.9rem;
+  margin: var(--space-2) 0 var(--space-1);
+}
+
+.listing-card__distance {
+  font-size: 0.8rem;
+  margin-top: var(--space-2);
+}
+
+/* pickup_pending isn't covered by base.css's badge set (Phase 1
+   only anticipated the listing-lifecycle statuses it knew about at
+   the time) */
+.badge--pickup_pending { background: var(--status-reserved-bg); color: var(--status-reserved-fg); }
+
+/* ---------- Pagination ---------- */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+/* ---------- Listing detail page ---------- */
+
+.listing-detail {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.listing-detail__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.listing-detail__header h1 {
+  font-size: 1.6rem;
+  margin: 0;
+}
+
+.listing-detail__facts {
+  margin-top: var(--space-4);
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  row-gap: var(--space-2);
+}
+.listing-detail__facts dt {
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+.listing-detail__facts dd {
+  margin: 0;
+}
+
+#detail-actions {
+  margin-top: var(--space-5);
+}
+
+@media (max-width: 640px) {
+  .filter-bar { flex-direction: column; align-items: stretch; }
+  .filter-bar__actions { margin-left: 0; }
+  .listing-detail__facts { grid-template-columns: 1fr; row-gap: var(--space-1); }
+  .listing-detail__facts dt { margin-top: var(--space-2); }
+}

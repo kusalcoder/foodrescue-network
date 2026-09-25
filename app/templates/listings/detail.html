@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Listing Details — FoodRescue Network{% endblock %}
+
+{% block content %}
+<section class="listing-detail" data-listing-id="{{ listing_id }}">
+  <a class="back-link" href="{{ url_for('frontend.listings_page') }}">&larr; Back to listings</a>
+
+  <div id="guest-notice" data-guest-only class="alert alert--info">
+    <a href="{{ url_for('frontend.login_page') }}">Log in</a> or
+    <a href="{{ url_for('frontend.register_page') }}">register</a>
+    to view this listing.
+  </div>
+
+  <div data-auth-only hidden>
+    <div id="detail-alert"></div>
+    <p id="detail-loading" class="text-muted">Loading listing…</p>
+    <article id="detail-content" hidden></article>
+
+    <!-- Recipient-only request form. Hidden by default; JS shows it
+         once we know the viewer is a recipient AND the listing is
+         still available AND they don't already have an active
+         request against it. -->
+    <div id="request-section" hidden>
+      <h2>Request Pickup</h2>
+
+      <div id="already-requested-note" class="alert alert--info" hidden></div>
+      <div id="request-alert"></div>
+
+      <form id="request-form">
+        <div class="form-field">
+          <label for="requested_quantity">Quantity you'd like</label>
+          <input type="number" id="requested_quantity" name="requested_quantity" min="0.01" step="0.01" required>
+        </div>
+        <div class="form-field">
+          <label for="request_message">Message to the provider <span class="text-muted">(optional)</span></label>
+          <textarea id="request_message" name="request_message" rows="2" placeholder="e.g. We can pick up any time after 5pm."></textarea>
+        </div>
+        <button type="submit" class="btn btn--primary" id="request-submit-btn">Submit Request</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/listing-detail.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Users — FoodRescue Network{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div id="guest-notice" class="alert alert--info" hidden>
+  <a href="{{ url_for('frontend.login_page') }}">Log in</a> as an administrator to manage users.
+</div>
+
+<div id="wrong-role-notice" class="alert alert--info" hidden>
+  This page is for administrator accounts only.
+</div>
+
+<section id="users-page" hidden>
+  <h1>Manage Users</h1>
+
+  <nav class="admin-subnav" aria-label="Admin">
+    <a href="{{ url_for('frontend.admin_verify_recipient_page') }}">Verify Recipient</a>
+    <a href="{{ url_for('frontend.admin_users_page') }}" class="is-active">Manage Users</a>
+    <a href="{{ url_for('frontend.admin_audit_log_page') }}">Audit Log</a>
+    <a href="{{ url_for('frontend.admin_reports_page') }}">Reports</a>
+  </nav>
+
+  <div id="page-alert"></div>
+
+  <div class="form-row admin-filters">
+    <div class="form-field">
+      <label for="role-filter">Role</label>
+      <select id="role-filter">
+        <option value="">All roles</option>
+        <option value="provider">Provider</option>
+        <option value="recipient">Recipient</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="status-filter">Status</label>
+      <select id="status-filter">
+        <option value="">All statuses</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="search-filter">Search (name or email)</label>
+      <input type="search" id="search-filter" placeholder="e.g. jane@example.com">
+    </div>
+  </div>
+
+  <p id="users-loading" class="text-muted">Loading users…</p>
+
+  <div id="users-table-wrap" hidden>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Joined</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="users-tbody"></tbody>
+    </table>
+
+    <p id="users-empty" class="text-muted" hidden>No users match these filters.</p>
+
+    <div class="admin-pagination">
+      <button type="button" id="prev-page" class="btn btn--secondary">← Previous</button>
+      <span id="page-indicator">Page 1</span>
+      <button type="button" id="next-page" class="btn btn--secondary">Next →</button>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/admin-users.js') }}"></script>
+{% endblock %}

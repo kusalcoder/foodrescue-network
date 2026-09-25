@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}My Pickups — FoodRescue Network{% endblock %}
+
+{% block content %}
+<section class="listings-page" data-page="my-pickups">
+  <div id="guest-notice" class="alert alert--info" hidden>
+    <a href="{{ url_for('frontend.login_page') }}">Log in</a> to see your pickups.
+  </div>
+
+  <div id="no-profile-notice" class="alert alert--info" hidden>
+    <p>You need a provider or recipient profile before you'll have any pickups.</p>
+  </div>
+
+  <div id="dashboard" hidden>
+    <div class="listings-page__header">
+      <h1>My Pickups</h1>
+      <p class="text-muted" id="page-subtitle">Everything scheduled, in progress, or done.</p>
+    </div>
+
+    <div id="pk-alert"></div>
+
+    <div class="request-filter">
+      <div class="form-field request-filter__field">
+        <label for="status-filter">Show</label>
+        <select id="status-filter">
+          <option value="active" selected>Needs attention (scheduled/confirmed)</option>
+          <option value="">All statuses</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="completed">Completed</option>
+          <option value="failed">Failed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+    </div>
+
+    <p id="pk-loading" class="text-muted">Loading your pickups…</p>
+    <p id="pk-empty" class="text-muted" hidden></p>
+
+    <div id="pk-grid" class="cards listings-grid" hidden></div>
+
+    <div id="pagination" class="pagination" hidden>
+      <button type="button" class="btn btn--secondary" id="prev-page">&laquo; Previous</button>
+      <span id="page-info" class="text-muted"></span>
+      <button type="button" class="btn btn--secondary" id="next-page">Next &raquo;</button>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/pickups.js') }}"></script>
+{% endblock %}

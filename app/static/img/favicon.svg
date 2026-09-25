@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="FoodRescue Network">
+  <rect width="64" height="64" rx="12" fill="#2f7a4f"/>
+  <path d="M16 35c12-2 23 1 32 12-13 3-25-1-32-12Z" fill="#fff"/>
+  <path d="M19 34c5-13 13-19 25-22-1 11-8 20-25 22Z" fill="#e8834a"/>
+  <path d="M19 35c8 2 15 6 21 12" fill="none" stroke="#2f7a4f" stroke-linecap="round" stroke-width="3"/>
+</svg>

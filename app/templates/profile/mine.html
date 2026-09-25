@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile — FoodRescue Network{% endblock %}
+
+{% block content %}
+<div id="guest-notice" class="alert alert--info" hidden>
+  <a href="{{ url_for('frontend.login_page') }}">Log in</a> to manage your profile.
+</div>
+
+<div id="wrong-role-notice" class="alert alert--info" hidden>
+  <p>Organization profiles are for provider and recipient accounts. Admin
+  accounts don't have one.</p>
+</div>
+
+<section class="auth-page profile-page" id="profile-page" hidden style="max-width: 520px;">
+  <h1 id="page-title">My Profile</h1>
+
+  <div id="verification-banner" hidden></div>
+
+  <div id="form-alert"></div>
+  <p id="form-loading" class="text-muted">Loading your profile…</p>
+
+  <form id="profile-form" novalidate hidden>
+    <div class="form-field">
+      <label for="organization_name">Organization Name</label>
+      <input type="text" id="organization_name" required maxlength="200">
+      <div class="field-error" data-error-for="organization_name"></div>
+    </div>
+
+    <div class="form-field">
+      <label for="contact_info">Contact Info <span class="text-muted">(optional)</span></label>
+      <input type="text" id="contact_info" maxlength="150" placeholder="Phone or email">
+    </div>
+
+    <div class="form-field">
+      <label for="address">Address <span class="text-muted">(optional)</span></label>
+      <input type="text" id="address" maxlength="255">
+    </div>
+
+    <div class="form-field">
+      <label for="city">City <span class="text-muted">(optional)</span></label>
+      <input type="text" id="city" maxlength="100">
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label for="latitude">Latitude <span class="text-muted">(optional)</span></label>
+        <input type="number" id="latitude" step="0.000001" min="-90" max="90">
+      </div>
+      <div class="form-field">
+        <label for="longitude">Longitude <span class="text-muted">(optional)</span></label>
+        <input type="number" id="longitude" step="0.000001" min="-180" max="180">
+      </div>
+    </div>
+    <p class="text-muted" style="margin-top: -0.5rem;">
+      Setting these enables "near me" search on listings — see either field
+      blank to skip it for now.
+    </p>
+    <div class="field-error" data-error-for="coordinates"></div>
+
+    <div class="form-field">
+      <label for="description">Description <span class="text-muted">(optional)</span></label>
+      <textarea id="description" rows="3"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn--primary" id="submit-btn">Save Profile</button>
+  </form>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}

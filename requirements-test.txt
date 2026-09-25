@@ -1,0 +1,12 @@
+# Phase 12 — testing dependencies.
+#
+# Install with:
+#   pip install -r requirements-test.txt --break-system-packages
+# (drop --break-system-packages if you're not on that kind of Python
+# install — Windows/venv users generally don't need it)
+#
+# These are IN ADDITION TO requirements.txt (Flask, SQLAlchemy,
+# psycopg2, PyJWT, bcrypt, etc.) — install that first if you haven't.
+
+pytest>=8.0
+pytest-flask>=1.3

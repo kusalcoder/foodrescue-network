@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Incoming Requests — FoodRescue Network{% endblock %}
+
+{% block content %}
+<section class="listings-page" data-page="provider-requests" data-scope="all">
+  <div id="guest-notice" class="alert alert--info" hidden>
+    <a href="{{ url_for('frontend.login_page') }}">Log in</a> as a provider to see requests for your listings.
+  </div>
+
+  <div id="wrong-role-notice" class="alert alert--info" hidden>
+    This page is for provider accounts. Recipients track their own requests
+    under <a href="{{ url_for('frontend.my_requests_page') }}">My Requests</a>.
+  </div>
+
+  <div id="no-profile-notice" class="alert alert--info" hidden>
+    <p>You need a provider profile before you can manage requests.</p>
+    <p class="text-muted">
+      Provider profile setup doesn't have a page yet (that's Phase 10) — for
+      now, create one by sending a <code>POST /api/providers/profile</code>
+      request with your organization details.
+    </p>
+  </div>
+
+  <div id="dashboard" hidden>
+    <div class="listings-page__header">
+      <h1>Incoming Requests</h1>
+      <p class="text-muted">
+        Everything recipients have requested across all of your listings.
+      </p>
+    </div>
+
+    <div id="req-alert"></div>
+
+    <div class="request-filter" id="filter-bar" hidden>
+      <div class="form-field request-filter__field">
+        <label for="status-filter">Show</label>
+        <select id="status-filter">
+          <option value="pending" selected>Pending only (needs a decision)</option>
+          <option value="">All statuses</option>
+          <option value="accepted">Accepted</option>
+          <option value="rejected">Rejected</option>
+          <option value="cancelled">Cancelled</option>
+          <option value="pickup_pending">Pickup Pending</option>
+          <option value="completed">Completed</option>
+        </select>
+      </div>
+    </div>
+
+    <p id="req-loading" class="text-muted">Loading requests…</p>
+    <p id="req-empty" class="text-muted" hidden></p>
+
+    <div id="req-groups" hidden></div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/requests-provider.js') }}"></script>
+{% endblock %}

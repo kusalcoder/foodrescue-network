@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications — FoodRescue Network{% endblock %}
+
+{% block content %}
+<section class="listings-page" data-page="notifications">
+  <div id="guest-notice" class="alert alert--info" hidden>
+    <a href="{{ url_for('frontend.login_page') }}">Log in</a> to see your notifications.
+  </div>
+
+  <div id="dashboard" hidden>
+    <div class="listings-page__header">
+      <h1>Notifications</h1>
+      <button type="button" class="btn btn--secondary" id="mark-all-read" hidden>Mark all as read</button>
+    </div>
+
+    <div id="notif-alert"></div>
+
+    <div class="request-filter">
+      <div class="form-field request-filter__field request-filter__field--checkbox">
+        <label>
+          <input type="checkbox" id="unread-only">
+          Show unread only
+        </label>
+      </div>
+    </div>
+
+    <p id="notif-loading" class="text-muted">Loading notifications…</p>
+    <p id="notif-empty" class="text-muted" hidden></p>
+
+    <div id="notif-list" class="notif-list" hidden></div>
+
+    <div id="pagination" class="pagination" hidden>
+      <button type="button" class="btn btn--secondary" id="prev-page">&laquo; Previous</button>
+      <span id="page-info" class="text-muted"></span>
+      <button type="button" class="btn btn--secondary" id="next-page">Next &raquo;</button>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,19 @@
+# --- Phase 1: Flask Foundation ---
+Flask==3.0.3
+gunicorn==23.0.0
+python-dotenv==1.0.1
+
+# --- Phase 2: PostgreSQL Database Layer ---
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.7
+psycopg2-binary==2.9.9
+
+# --- Phase 3: Authentication ---
+PyJWT==2.9.0
+bcrypt==4.2.0
+
+# --- Will be added in later phases (kept here as a preview/roadmap) ---
+# marshmallow        # Phase 4+ — request/response validation schemas
+
+# --- Phase 12: testing dependencies (see requirements-test.txt) ---
+# pytest, pytest-flask — install via: pip install -r requirements-test.txt

@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Distribution History — FoodRescue Network{% endblock %}
+
+{% block content %}
+<section class="listings-page" data-page="my-distributions">
+  <div id="guest-notice" class="alert alert--info" hidden>
+    <a href="{{ url_for('frontend.login_page') }}">Log in</a> to see your distribution history.
+  </div>
+
+  <div id="no-profile-notice" class="alert alert--info" hidden>
+    <p>You need a provider or recipient profile before you'll have any history here.</p>
+  </div>
+
+  <div id="dashboard" hidden>
+    <div class="listings-page__header">
+      <h1>Distribution History</h1>
+      <p class="text-muted" id="page-subtitle">
+        Every completed handover you've been part of — a permanent record, not something you manage.
+      </p>
+    </div>
+
+    <div id="dist-alert"></div>
+
+    <p id="dist-loading" class="text-muted">Loading history…</p>
+    <p id="dist-empty" class="text-muted" hidden>
+      Nothing here yet — completed pickups will show up as history once they happen.
+    </p>
+
+    <div id="dist-grid" class="cards listings-grid" hidden></div>
+
+    <div id="pagination" class="pagination" hidden>
+      <button type="button" class="btn btn--secondary" id="prev-page">&laquo; Previous</button>
+      <span id="page-info" class="text-muted"></span>
+      <button type="button" class="btn btn--secondary" id="next-page">Next &raquo;</button>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/distributions.js') }}"></script>
+{% endblock %}

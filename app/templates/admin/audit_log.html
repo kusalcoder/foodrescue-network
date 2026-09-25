@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Log — FoodRescue Network{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
+<div id="guest-notice" class="alert alert--info" hidden>
+  <a href="{{ url_for('frontend.login_page') }}">Log in</a> as an administrator to view the audit log.
+</div>
+
+<div id="wrong-role-notice" class="alert alert--info" hidden>
+  This page is for administrator accounts only.
+</div>
+
+<section id="audit-page" hidden>
+  <h1>Audit Log</h1>
+
+  <nav class="admin-subnav" aria-label="Admin">
+    <a href="{{ url_for('frontend.admin_verify_recipient_page') }}">Verify Recipient</a>
+    <a href="{{ url_for('frontend.admin_users_page') }}">Manage Users</a>
+    <a href="{{ url_for('frontend.admin_audit_log_page') }}" class="is-active">Audit Log</a>
+    <a href="{{ url_for('frontend.admin_reports_page') }}">Reports</a>
+  </nav>
+
+  <div id="page-alert"></div>
+
+  <div class="form-row admin-filters">
+    <div class="form-field">
+      <label for="action-filter">Action</label>
+      <input type="text" id="action-filter" placeholder="e.g. login, account_deactivated">
+    </div>
+    <div class="form-field">
+      <label for="resource-type-filter">Resource type</label>
+      <input type="text" id="resource-type-filter" placeholder="e.g. user, food_listing">
+    </div>
+    <div class="form-field">
+      <label for="start-date-filter">From</label>
+      <input type="date" id="start-date-filter">
+    </div>
+    <div class="form-field">
+      <label for="end-date-filter">To</label>
+      <input type="date" id="end-date-filter">
+    </div>
+    <div class="form-field">
+      <button type="button" class="btn btn--secondary" id="apply-filters">Apply</button>
+    </div>
+  </div>
+
+  <p id="audit-loading" class="text-muted">Loading audit log…</p>
+
+  <div id="audit-table-wrap" hidden>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>User ID</th>
+          <th>Action</th>
+          <th>Resource</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody id="audit-tbody"></tbody>
+    </table>
+
+    <p id="audit-empty" class="text-muted" hidden>No audit log entries match these filters.</p>
+
+    <div class="admin-pagination">
+      <button type="button" id="prev-page" class="btn btn--secondary">← Previous</button>
+      <span id="page-indicator">Page 1</span>
+      <button type="button" id="next-page" class="btn btn--secondary">Next →</button>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/admin-audit-log.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}FoodRescue Network{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <a class="brand" href="{{ url_for('frontend.index') }}">
+        <span class="brand__mark" aria-hidden="true">🥗</span>
+        FoodRescue Network
+      </a>
+
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav class="main-nav" aria-label="Primary" id="main-nav">
+        <a href="{{ url_for('frontend.index') }}">Home</a>
+        <a href="{{ url_for('frontend.listings_page') }}" data-auth-only hidden>Browse Listings</a>
+        <a href="{{ url_for('frontend.my_listings_page') }}" data-role-only="provider" hidden>My Listings</a>
+        <a href="{{ url_for('frontend.incoming_requests_page') }}" data-role-only="provider" hidden>Incoming Requests</a>
+        <a href="{{ url_for('frontend.my_requests_page') }}" data-role-only="recipient" hidden>My Requests</a>
+        <!-- /pickups, /distributions and /profile are shared by both
+             roles, so each is two links (one per role) rather than
+             extending data-role-only to accept a list — same
+             mechanism, no auth.js changes needed. -->
+        <a href="{{ url_for('frontend.my_pickups_page') }}" data-role-only="provider" hidden>My Pickups</a>
+        <a href="{{ url_for('frontend.my_pickups_page') }}" data-role-only="recipient" hidden>My Pickups</a>
+        <a href="{{ url_for('frontend.my_distributions_page') }}" data-role-only="provider" hidden>History</a>
+        <a href="{{ url_for('frontend.my_distributions_page') }}" data-role-only="recipient" hidden>History</a>
+        <a href="{{ url_for('frontend.my_profile_page') }}" data-role-only="provider" hidden>My Profile</a>
+        <a href="{{ url_for('frontend.my_profile_page') }}" data-role-only="recipient" hidden>My Profile</a>
+        <a href="{{ url_for('frontend.admin_verify_recipient_page') }}" data-role-only="admin" hidden>Verify Recipient</a>
+        <a href="{{ url_for('frontend.admin_users_page') }}" data-role-only="admin" hidden>Manage Users</a>
+        <a href="{{ url_for('frontend.admin_audit_log_page') }}" data-role-only="admin" hidden>Audit Log</a>
+        <a href="{{ url_for('frontend.admin_reports_page') }}" data-role-only="admin" hidden>Reports</a>
+
+        <a href="{{ url_for('frontend.notifications_page') }}" class="nav-bell" data-auth-only hidden>
+          <span aria-hidden="true">🔔</span>
+          <span class="nav-bell__count" data-unread-count hidden>0</span>
+          <span class="sr-only">Notifications</span>
+        </a>
+
+        <span class="main-nav__auth" data-auth-area>
+          <!-- Filled in by app/static/js/auth.js once a page loads:
+               shows Login/Register when signed out, or the user's
+               name + Logout when signed in. Empty by default so the
+               page never flashes the wrong state before JS runs. -->
+        </span>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container page">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>FoodRescue Network — connecting surplus food with people who need it.</p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/notifications-badge.js') }}"></script>
+  <script>
+    // Phase 12: mobile hamburger nav toggle
+    (function () {
+      var toggle = document.getElementById('nav-toggle');
+      var nav = document.getElementById('main-nav');
+      if (!toggle || !nav) return;
+      toggle.addEventListener('click', function () {
+        var isOpen = nav.classList.toggle('is-open');
+        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      });
+    })();
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

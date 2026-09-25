@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}My Requests — FoodRescue Network{% endblock %}
+
+{% block content %}
+<section class="listings-page" data-page="my-requests">
+  <div id="guest-notice" class="alert alert--info" hidden>
+    <a href="{{ url_for('frontend.login_page') }}">Log in</a> as a recipient to see your requests.
+  </div>
+
+  <div id="wrong-role-notice" class="alert alert--info" hidden>
+    This page is for recipient accounts. Providers manage requests for their own
+    listings from a dashboard coming in Phase 6.
+  </div>
+
+  <div id="no-profile-notice" class="alert alert--info" hidden>
+    <p>You need a recipient profile before you can request food.</p>
+    <p class="text-muted">
+      Recipient profile setup doesn't have a page yet (that's a later phase) —
+      for now, create one by sending a <code>POST /api/recipients/profile</code>
+      request with your organization details. See <code>PHASE5_SETUP.md</code>
+      for a ready-to-run example.
+    </p>
+  </div>
+
+  <div id="dashboard" hidden>
+    <div class="listings-page__header">
+      <h1>My Requests</h1>
+      <p class="text-muted">Everything you've requested, regardless of status.</p>
+    </div>
+
+    <div id="mine-alert"></div>
+    <p id="mine-loading" class="text-muted">Loading your requests…</p>
+    <p id="mine-empty" class="text-muted" hidden>
+      You haven't requested anything yet. <a href="{{ url_for('frontend.listings_page') }}">Browse listings</a> to get started.
+    </p>
+
+    <div id="mine-grid" class="cards listings-grid" hidden></div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/requests-mine.js') }}"></script>
+{% endblock %}

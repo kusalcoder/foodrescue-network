@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Log In — FoodRescue Network{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+  <h1>Log in</h1>
+
+  <div id="form-alert"></div>
+
+  <form id="login-form" novalidate>
+    <div class="form-field">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" required autocomplete="email">
+      <div class="field-error" data-error-for="email"></div>
+    </div>
+
+    <div class="form-field">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required autocomplete="current-password">
+      <div class="field-error" data-error-for="password"></div>
+    </div>
+
+    <button type="submit" class="btn btn--primary" id="submit-btn">Log In</button>
+  </form>
+
+  <p class="text-muted" style="margin-top: var(--space-4);">
+    Don't have an account yet? <a href="{{ url_for('frontend.register_page') }}">Register</a>
+  </p>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/auth-forms.js') }}"></script>
+{% endblock %}

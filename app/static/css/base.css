@@ -1,0 +1,674 @@
+/* ==========================================================================
+   FoodRescue Network — Base Styles (Phase 1)
+
+   Design tokens live at the top as CSS custom properties so every
+   later phase's page-specific stylesheet can reuse the same colors,
+   spacing, and type scale instead of hardcoding new values.
+   ========================================================================== */
+
+:root {
+  /* Color */
+  --color-primary: #2f7a4f;       /* deep green — food/growth */
+  --color-primary-dark: #235d3c;
+  --color-accent: #e8834a;        /* warm orange — urgency/rescue */
+  --color-bg: #faf9f6;
+  --color-surface: #ffffff;
+  --color-text: #232323;
+  --color-text-muted: #63696a;
+  --color-border: #e2e0da;
+  --color-success: #2f7a4f;
+  --color-warning: #b8860b;
+  --color-danger: #c0392b;
+  --color-info: #2f6f8f;
+
+  /* Status badge colors (used from Phase 3 onward for listing /
+     request / pickup status pills) */
+  --status-available-bg: #e6f4ea;   --status-available-fg: #1e6b3c;
+  --status-reserved-bg: #fff3e0;    --status-reserved-fg: #a15c00;
+  --status-collected-bg: #e8eaf0;   --status-collected-fg: #3b4258;
+  --status-cancelled-bg: #fdecea;   --status-cancelled-fg: #a33125;
+  --status-expired-bg: #f2f2f2;     --status-expired-fg: #757575;
+  --status-pending-bg: #fff8e1;     --status-pending-fg: #8a6d00;
+
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2rem;
+  --space-6: 3rem;
+
+  /* Type */
+  --font-body: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --font-size-base: 1rem;
+  --radius: 8px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.10);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+}
+
+.container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+
+a { color: var(--color-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+h1, h2, h3 { line-height: 1.25; margin-top: 0; }
+
+/* ---------- Header / Nav ---------- */
+
+.site-header {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--space-3);
+  padding-bottom: var(--space-3);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--color-text);
+}
+.brand:hover { text-decoration: none; }
+.brand__mark { font-size: 1.4rem; }
+
+.main-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.main-nav a { color: var(--color-text); font-weight: 500; }
+
+.main-nav__auth {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* ---------- Page / content ---------- */
+
+.page {
+  min-height: 60vh;
+  padding-top: var(--space-5);
+  padding-bottom: var(--space-6);
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  display: inline-block;
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+.btn:hover { text-decoration: none; }
+
+.btn--primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+.btn--primary:hover { background: var(--color-primary-dark); }
+
+.btn--secondary {
+  background: transparent;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.btn--secondary:hover { background: rgba(47, 122, 79, 0.08); }
+
+.btn--danger {
+  background: var(--color-danger);
+  color: #fff;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---------- Cards ---------- */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---------- Hero (landing page) ---------- */
+
+.hero {
+  text-align: center;
+  padding: var(--space-6) 0;
+}
+.hero__subtitle {
+  max-width: 620px;
+  margin: var(--space-3) auto var(--space-5);
+  color: var(--color-text-muted);
+}
+.hero__actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+}
+
+.how-it-works { padding: var(--space-6) 0; text-align: center; }
+
+/* ---------- Status badges (used from Phase 3 onward) ---------- */
+
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+.badge--available      { background: var(--status-available-bg); color: var(--status-available-fg); }
+.badge--reserved        { background: var(--status-reserved-bg);  color: var(--status-reserved-fg); }
+.badge--collected       { background: var(--status-collected-bg); color: var(--status-collected-fg); }
+.badge--cancelled       { background: var(--status-cancelled-bg); color: var(--status-cancelled-fg); }
+.badge--expired         { background: var(--status-expired-bg);   color: var(--status-expired-fg); }
+.badge--pending         { background: var(--status-pending-bg);   color: var(--status-pending-fg); }
+.badge--pickup_pending  { background: var(--status-pending-bg);   color: var(--status-pending-fg); }
+
+/* ---------- Forms (used from Phase 2 onward) ---------- */
+
+.form-field {
+  margin-bottom: var(--space-3);
+}
+.form-field label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}
+.form-field input,
+.form-field select,
+.form-field textarea {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+.form-field .field-error {
+  color: var(--color-danger);
+  font-size: 0.85rem;
+  margin-top: var(--space-1);
+}
+
+.alert {
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  margin-bottom: var(--space-4);
+  font-size: 0.95rem;
+}
+.alert--error   { background: var(--status-cancelled-bg); color: var(--status-cancelled-fg); }
+.alert--success { background: var(--status-available-bg); color: var(--status-available-fg); }
+.alert--info    { background: #eaf3f8; color: var(--color-info); }
+
+/* ---------- Utility ---------- */
+
+.text-muted { color: var(--color-text-muted); }
+.text-center { text-align: center; }
+[hidden] { display: none !important; }
+
+/* ---------- Footer ---------- */
+
+.site-footer {
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-4) 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 640px) {
+  .site-header__inner { flex-direction: column; gap: var(--space-2); align-items: flex-start; }
+  .main-nav { flex-wrap: wrap; }
+  .hero__actions { flex-direction: column; align-items: center; }
+}
+
+/* ---------- Auth pages (Phase 2) ---------- */
+
+.auth-page {
+  max-width: 420px;
+  margin: 0 auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-page h1 {
+  font-size: 1.5rem;
+  margin-bottom: var(--space-2);
+}
+
+.auth-page .btn {
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
+/* ---------- Listings feed + detail (Phase 3) ---------- */
+
+.listings-page__header {
+  margin-bottom: var(--space-4);
+}
+
+.filters-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.filters-bar__field {
+  margin-bottom: 0;
+  min-width: 180px;
+  flex: 1 1 180px;
+}
+.filters-bar__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.listings-grid { margin-top: 0; }
+
+.listing-card {
+  display: flex;
+  flex-direction: column;
+}
+.listing-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+.listing-card__category { font-size: 0.85rem; }
+.listing-card__desc {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+.listing-card__meta {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-2) 0 var(--space-3);
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+.listing-card__meta li { margin-bottom: 0.2rem; }
+.listing-card .btn { margin-top: auto; align-self: flex-start; }
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+.pagination__status { font-size: 0.9rem; }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: var(--space-4);
+}
+
+.listing-detail__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.listing-detail__facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+.listing-detail__facts dt {
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+.listing-detail__facts dd { margin: 0; }
+
+.listing-detail__section { margin-bottom: var(--space-4); }
+.listing-detail__section h3 { font-size: 1rem; margin-bottom: var(--space-1); }
+
+.listing-detail__unavailable-note { margin-top: var(--space-2); }
+
+@media (max-width: 640px) {
+  .listing-detail__facts { grid-template-columns: 1fr; }
+  .listing-detail__facts dt { margin-top: var(--space-2); }
+}
+
+/* ---------- Provider listing management (Phase 4) ---------- */
+
+.listings-page__header--split {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/* Multi-button action rows (My Listings cards) need different rules
+   than the single "View details" button on the public feed card —
+   this comes after the Phase 3 `.listing-card .btn` rule above so it
+   wins on equal specificity. */
+.listing-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: auto;
+}
+.listing-card__actions .btn {
+  margin-top: 0;
+  align-self: auto;
+}
+
+.form-page {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.form-page h1 { margin-bottom: var(--space-4); }
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.form-row .form-field {
+  flex: 1 1 160px;
+  min-width: 160px;
+}
+
+.form-hint {
+  margin-top: calc(var(--space-2) * -1);
+  margin-bottom: var(--space-3);
+  font-size: 0.85rem;
+}
+
+code {
+  background: var(--color-border);
+  border-radius: 4px;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.85em;
+}
+
+/* ---------- Recipient request flow (Phase 5) ---------- */
+
+#request-section {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+#request-section h2 {
+  font-size: 1.2rem;
+  margin-bottom: var(--space-3);
+}
+
+.listing-card__desc {
+  font-style: italic;
+}
+
+/* ---------- Provider request management (Phase 6) ---------- */
+
+.request-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.request-filter__field {
+  margin-bottom: 0;
+  min-width: 260px;
+}
+
+/* Each listing gets its own titled block of request cards, so a
+   provider can see at a glance which listing a request belongs to
+   without every card having to repeat the listing's name. */
+.request-group {
+  margin-bottom: var(--space-6);
+}
+
+.request-group__header {
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.request-group__header h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 1.15rem;
+  margin: 0 0 var(--space-1);
+}
+
+.request-group__header p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 640px) {
+  .request-filter { flex-direction: column; align-items: stretch; }
+  .request-filter__field { min-width: 0; }
+  .request-group__header h2 { flex-wrap: wrap; gap: var(--space-2); }
+}
+
+/* ---------- Pickup lifecycle (Phase 7) ---------- */
+
+/* The inline "Schedule Pickup" form on an accepted request card
+   (app/static/js/requests-provider.js) — kept visually distinct
+   from the card's own content so it reads as a separate step, not
+   more details about the request itself. */
+.schedule-form {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--color-border);
+}
+
+.schedule-form .form-field {
+  margin-bottom: var(--space-2);
+}
+
+.schedule-form .form-field label {
+  font-size: 0.85rem;
+}
+
+/* ---------- Notifications (Phase 9) ---------- */
+
+.request-filter__field--checkbox label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 500;
+}
+.request-filter__field--checkbox input {
+  width: auto;
+}
+
+/* The 🔔 bell link in the navbar and its unread-count pill. */
+.nav-bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--color-text);
+}
+
+.nav-bell__count {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.65rem;
+  min-width: 1.1rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.1rem;
+  text-align: center;
+}
+
+/* Visually hidden but still readable by screen readers — used on
+   the bell's "Notifications" label, which the icon+count already
+   convey visually. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+}
+
+.notif-item--unread {
+  border-left: 3px solid var(--color-primary);
+  background: #f4faf6;
+}
+
+.notif-item__title {
+  font-weight: 600;
+  margin: 0 0 var(--space-1);
+}
+
+.notif-item__message {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.notif-item__meta {
+  margin: var(--space-1) 0 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.notif-item__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .notif-item { flex-direction: column; }
+  .notif-item__actions { flex-direction: row; align-items: center; }
+}
+
+/* ---------- Mobile nav toggle (Phase 12) ---------- */
+
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.nav-toggle span {
+  display: block;
+  height: 3px;
+  width: 100%;
+  background: var(--color-text);
+  border-radius: 2px;
+}
+
+@media (max-width: 768px) {
+  .site-header__inner { flex-wrap: wrap; }
+  .nav-toggle { display: flex; order: 2; }
+  .brand { order: 1; }
+  .main-nav {
+    order: 3;
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    gap: var(--space-2);
+    padding-top: var(--space-3);
+  }
+  .main-nav.is-open { display: flex; }
+  .main-nav__auth { width: 100%; }
+}
