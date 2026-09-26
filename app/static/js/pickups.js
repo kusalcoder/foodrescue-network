@@ -65,6 +65,9 @@ function formatDateTime(iso) {
 }
 
 (function () {
+  if (window.__frnMyPickupsPollingInitialized) return;
+  window.__frnMyPickupsPollingInitialized = true;
+
   const root = document.querySelector('[data-page="my-pickups"]');
   if (!root) return;
 
@@ -123,12 +126,10 @@ function formatDateTime(iso) {
     let actions = '';
     if (myRole === 'recipient') {
       if (pickup.status === 'scheduled') {
-        actions = `
-          <button type="button" class="btn btn--primary" data-confirm-id="${pickup.id}">Confirm</button>
-          <button type="button" class="btn btn--danger" data-cancel-id="${pickup.id}">Cancel</button>
-        `;
-      } else if (pickup.status === 'confirmed') {
-        actions = `<button type="button" class="btn btn--danger" data-cancel-id="${pickup.id}">Cancel</button>`;
+        actions = `<button type="button" class="btn btn--primary" data-confirm-id="${pickup.id}">Confirm</button>`;
+      }
+      if (ACTIVE_PICKUP_STATUSES.includes(pickup.status)) {
+        actions += `<button type="button" class="btn btn--danger" data-cancel-id="${pickup.id}">Cancel</button>`;
       }
     } else if (myRole === 'provider') {
       if (pickup.status === 'scheduled' || pickup.status === 'confirmed') {
@@ -294,6 +295,58 @@ function formatDateTime(iso) {
     }
   }
 
+  let pollTimer = null;
+  let pollInFlight = false;
+  let initialLoadComplete = false;
+
+  async function refreshPickupStatuses() {
+    if (document.visibilityState !== 'visible' || pollInFlight) return;
+
+    pollInFlight = true;
+    try {
+      const result = await Api.get(`/api/pickups?page=${currentPage}&limit=50`);
+      const updatedPickups = result.data.pickups;
+      const currentById = new Map(currentPickups.map((pickup) => [pickup.id, pickup]));
+      const hasChanged = updatedPickups.length !== currentPickups.length
+        || updatedPickups.some((pickup) => {
+          const current = currentById.get(pickup.id);
+          return !current || current.status !== pickup.status;
+        });
+
+      if (hasChanged) {
+        currentPickups = updatedPickups;
+        currentPagination = result.data.pagination;
+        render();
+        if (currentPagination.total_pages > 1) {
+          el('pagination').hidden = false;
+          el('page-info').textContent =
+            `Page ${currentPagination.page} of ${currentPagination.total_pages} (${currentPagination.total} total)`;
+          el('prev-page').disabled = currentPagination.page <= 1;
+          el('next-page').disabled = currentPagination.page >= currentPagination.total_pages;
+        } else {
+          el('pagination').hidden = true;
+        }
+      }
+    } catch (err) {
+      // Status polling is best-effort; the next poll retries quietly.
+    } finally {
+      pollInFlight = false;
+    }
+  }
+
+  function startPolling() {
+    if (pollTimer || !initialLoadComplete || myRole !== 'recipient'
+      || document.visibilityState !== 'visible') return;
+    refreshPickupStatuses();
+    pollTimer = window.setInterval(refreshPickupStatuses, 3000);
+  }
+
+  function stopPolling() {
+    if (!pollTimer) return;
+    window.clearInterval(pollTimer);
+    pollTimer = null;
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     const user = Auth.isLoggedIn() ? Auth.getUser() : null;
     if (!user) {
@@ -317,6 +370,14 @@ function formatDateTime(iso) {
       }
     });
 
-    load();
+    load().then(() => {
+      initialLoadComplete = true;
+      startPolling();
+    });
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') startPolling();
+    else stopPolling();
   });
 })();

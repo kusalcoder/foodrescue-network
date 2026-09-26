@@ -164,6 +164,32 @@ def test_recipient_cancel_pickup_reverts_request_to_accepted(client, app):
     assert req_after["status"] == "accepted"
 
 
+def test_recipient_cannot_cancel_completed_pickup(client, app):
+    provider, listing, recipient, req = _accepted_request(client, app)
+    pickup = client.post(
+        f"/api/requests/{req['id']}/schedule-pickup",
+        headers=auth_headers(provider["token"]),
+    ).get_json()["data"]
+    complete_resp = client.post(
+        f"/api/pickups/{pickup['id']}/complete",
+        headers=auth_headers(provider["token"]),
+    )
+    assert complete_resp.status_code == 200
+    assert complete_resp.get_json()["data"]["status"] == "completed"
+
+    cancel_resp = client.post(
+        f"/api/pickups/{pickup['id']}/cancel",
+        headers=auth_headers(recipient["token"]),
+    )
+    assert cancel_resp.status_code == 409
+    assert cancel_resp.get_json()["error"] == "INVALID_PICKUP_STATE"
+
+    pickup_after_cancel_attempt = client.get(
+        f"/api/pickups/{pickup['id']}", headers=auth_headers(recipient["token"])
+    ).get_json()["data"]
+    assert pickup_after_cancel_attempt["status"] == "completed"
+
+
 def test_only_owning_provider_can_complete_pickup(client, app):
     provider, listing, recipient, req = _accepted_request(client, app)
     pickup = client.post(

@@ -38,6 +38,8 @@ const REQUEST_BADGE_CLASS = {
   completed: 'collected',
 };
 
+let requestStatusRefreshInFlight = false;
+
 function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
@@ -70,7 +72,7 @@ function requestCardHtml(req) {
     : '';
 
   return `
-    <article class="card listing-card" data-request-card="${req.id}">
+    <article class="card listing-card" data-request-card="${req.id}" data-request-status="${escapeHtml(req.status)}">
       <div class="listing-card__top">
         <span class="badge badge--${badgeClass}">${escapeHtml(statusLabel)}</span>
         <span class="text-muted listing-card__category">Requested ${formatDateTime(req.requested_at)}</span>
@@ -113,9 +115,7 @@ async function loadMine() {
 
     gridEl.innerHTML = data.map(requestCardHtml).join('');
     gridEl.hidden = false;
-    gridEl.querySelectorAll('[data-cancel-id]').forEach((btn) => {
-      btn.addEventListener('click', () => handleCancel(btn.dataset.cancelId));
-    });
+    bindCancelButtons(gridEl);
   } catch (err) {
     loadingEl.hidden = true;
     if (err.status === 401) {
@@ -129,6 +129,43 @@ async function loadMine() {
       return;
     }
     alertEl.innerHTML = `<div class="alert alert--error">${escapeHtml(err.message || 'Could not load your requests. Please try again.')}</div>`;
+  }
+}
+
+function bindCancelButtons(gridEl) {
+  if (gridEl.dataset.cancelHandlerBound) return;
+  gridEl.dataset.cancelHandlerBound = 'true';
+  gridEl.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-cancel-id]');
+    if (button && gridEl.contains(button)) handleCancel(button.dataset.cancelId);
+  });
+}
+
+async function refreshRequestStatuses() {
+  if (document.visibilityState !== 'visible' || requestStatusRefreshInFlight) return;
+
+  requestStatusRefreshInFlight = true;
+  try {
+    const { data } = await Api.get('/api/requests');
+    const gridEl = document.getElementById('mine-grid');
+    const cardsById = new Map(
+      Array.from(gridEl.querySelectorAll('[data-request-card]'))
+        .map((card) => [card.dataset.requestCard, card])
+    );
+    let changed = false;
+
+    data.forEach((request) => {
+      const card = cardsById.get(String(request.id));
+      if (!card || card.dataset.requestStatus === request.status) return;
+      card.outerHTML = requestCardHtml(request);
+      changed = true;
+    });
+
+    if (changed) bindCancelButtons(gridEl);
+  } catch (err) {
+    // Status polling is best-effort; the next poll retries without an alert.
+  } finally {
+    requestStatusRefreshInFlight = false;
   }
 }
 
@@ -169,4 +206,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('dashboard').hidden = false;
   loadMine();
+
+  if (!window.__frnMyRequestsPollingInitialized) {
+    window.__frnMyRequestsPollingInitialized = true;
+    let pollTimer = null;
+    const startPolling = () => {
+      if (pollTimer || document.visibilityState !== 'visible') return;
+      pollTimer = window.setInterval(refreshRequestStatuses, 3000);
+    };
+    const stopPolling = () => {
+      if (!pollTimer) return;
+      window.clearInterval(pollTimer);
+      pollTimer = null;
+    };
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        refreshRequestStatuses();
+        startPolling();
+      } else {
+        stopPolling();
+      }
+    });
+    startPolling();
+  }
 });

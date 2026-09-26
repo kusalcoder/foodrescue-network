@@ -568,6 +568,59 @@ code {
   text-align: center;
 }
 
+.notification-toasts {
+  position: fixed;
+  z-index: 1000;
+  top: 1rem;
+  right: 1rem;
+  display: grid;
+  gap: var(--space-2);
+  width: min(25rem, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.notification-toast {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  pointer-events: auto;
+}
+
+.notification-toast__icon {
+  font-size: 1.2rem;
+  line-height: 1.4;
+}
+
+.notification-toast__title {
+  margin: 0 0 var(--space-1);
+  font-weight: 700;
+}
+
+.notification-toast__message {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.notification-toast__close {
+  padding: 0 0.25rem;
+  background: transparent;
+  border: 0;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
 /* Visually hidden but still readable by screen readers — used on
    the bell's "Notifications" label, which the icon+count already
    convey visually. */
