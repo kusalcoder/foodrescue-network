@@ -269,10 +269,20 @@ def platform_summary() -> dict:
         .all()
     )
 
-    total_distributions, total_quantity = db.session.query(
-        db.func.count(DistributionRecord.id),
-        db.func.coalesce(db.func.sum(DistributionRecord.quantity), 0),
-    ).one()
+    distribution_counts_by_status = dict(
+        db.session.query(
+            DistributionRecord.completion_status,
+            db.func.count(DistributionRecord.id),
+        )
+        .group_by(DistributionRecord.completion_status)
+        .all()
+    )
+    total_distributions = sum(distribution_counts_by_status.values())
+    total_quantity = (
+        db.session.query(
+            db.func.coalesce(db.func.sum(DistributionRecord.quantity), 0)
+        ).scalar()
+    )
 
     return {
         "users_by_role": {role.value: count for role, count in users_by_role.items()},
@@ -283,5 +293,8 @@ def platform_summary() -> dict:
             status.value: count for status, count in recipients_by_verification.items()
         },
         "total_distributions": total_distributions,
+        "available_distributions": distribution_counts_by_status.get("available", 0),
+        "cancelled_distributions": distribution_counts_by_status.get("cancelled", 0),
+        "completed_distributions": distribution_counts_by_status.get("completed", 0),
         "total_quantity_distributed": float(total_quantity),
     }

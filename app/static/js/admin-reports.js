@@ -35,6 +35,12 @@ function titleCase(key) {
   const wrongRoleNotice = document.getElementById('wrong-role-notice');
   const pageEl = document.getElementById('reports-page');
   if (!pageEl) return;
+  if (window.__frnAdminReportsPollingInitialized) return;
+  window.__frnAdminReportsPollingInitialized = true;
+
+  const REPORT_POLL_INTERVAL_MS = 10000;
+  let pollTimer = null;
+  let loadInFlight = false;
 
   const user = Auth.isLoggedIn() ? Auth.getUser() : null;
   if (!user) { guestNotice.hidden = false; return; }
@@ -92,12 +98,14 @@ function titleCase(key) {
       </div>`;
   }
 
-  async function load() {
+  async function load({ silent = false } = {}) {
     const loadingEl = document.getElementById('reports-loading');
     const contentEl = document.getElementById('reports-content');
     const statCardsEl = document.getElementById('stat-cards');
     const breakdownsEl = document.getElementById('breakdowns');
 
+    if (loadInFlight) return;
+    loadInFlight = true;
     try {
       const result = await Api.get('/api/reports/platform-summary');
       const data = result.data || {};
@@ -124,15 +132,34 @@ function titleCase(key) {
       contentEl.hidden = false;
     } catch (err) {
       if (err.status === 401) { window.location.href = '/login'; return; }
-      if (err.status === 404) {
-        showAlert('The /api/reports/platform-summary endpoint was not found.');
-      } else {
-        showAlert(err.message || 'Could not load reports.');
+      if (!silent) {
+        if (err.status === 404) {
+          showAlert('The /api/reports/platform-summary endpoint was not found.');
+        } else {
+          showAlert(err.message || 'Could not load reports.');
+        }
       }
     } finally {
-      loadingEl.hidden = true;
+      if (!silent) loadingEl.hidden = true;
+      loadInFlight = false;
     }
   }
 
-  load();
+  function startPolling() {
+    if (pollTimer || document.visibilityState !== 'visible') return;
+    load({ silent: true });
+    pollTimer = window.setInterval(() => load({ silent: true }), REPORT_POLL_INTERVAL_MS);
+  }
+
+  function stopPolling() {
+    if (!pollTimer) return;
+    window.clearInterval(pollTimer);
+    pollTimer = null;
+  }
+
+  load().then(startPolling);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') startPolling();
+    else stopPolling();
+  });
 })();
