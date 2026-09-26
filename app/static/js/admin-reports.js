@@ -9,8 +9,12 @@
  *     users_by_role: {provider: N, recipient: N, admin: N},
  *     listings_by_status: {...},
  *     recipients_by_verification: {...},
+ *     available_distributions: N,
+ *     cancelled_distributions: N,
+ *     completed_distributions: N,
  *     total_distributions: N,
- *     total_quantity_distributed: N
+ *     total_quantity_distributed: N,
+ *     distribution_log: [{ id, completion_status, ... }]
  *   }
  *
  * Rendered generically rather than hard-coded to those exact keys:
@@ -145,9 +149,9 @@ function titleCase(key) {
     }
   }
 
-  function startPolling() {
+  function startPolling(refreshNow = false) {
     if (pollTimer || document.visibilityState !== 'visible') return;
-    load({ silent: true });
+    if (refreshNow) load({ silent: true });
     pollTimer = window.setInterval(() => load({ silent: true }), REPORT_POLL_INTERVAL_MS);
   }
 
@@ -159,7 +163,7 @@ function titleCase(key) {
 
   load().then(startPolling);
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') startPolling();
+    if (document.visibilityState === 'visible') startPolling(true);
     else stopPolling();
   });
 })();

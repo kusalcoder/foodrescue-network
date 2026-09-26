@@ -141,6 +141,7 @@ def test_platform_summary_distribution_counts_match_database_records(
     ).get_json()["data"]
     assert scheduled_summary["total_distributions"] == 0
     assert scheduled_summary["completed_distributions"] == 0
+    assert scheduled_summary["distribution_log"] == []
 
     completed = client.post(
         f"/api/pickups/{pickup['id']}/complete",
@@ -155,6 +156,9 @@ def test_platform_summary_distribution_counts_match_database_records(
     assert completed_summary["total_distributions"] == 1
     assert completed_summary["available_distributions"] == 0
     assert completed_summary["cancelled_distributions"] == 0
+    assert len(completed_summary["distribution_log"]) == 1
+    assert completed_summary["distribution_log"][0]["pickup_record_id"] == pickup["id"]
+    assert completed_summary["distribution_log"][0]["completion_status"] == "completed"
 
     repeated_summary = client.get(
         "/api/reports/platform-summary", headers=auth_headers(admin_token)
@@ -185,10 +189,26 @@ def test_platform_summary_distribution_counts_match_database_records(
     final_summary = client.get(
         "/api/reports/platform-summary", headers=auth_headers(admin_token)
     ).get_json()["data"]
+    log_counts = {}
+    for record in final_summary["distribution_log"]:
+        status = record["completion_status"]
+        log_counts[status] = log_counts.get(status, 0) + 1
 
-    assert final_summary["available_distributions"] == database_counts.get("available", 0) == 1
-    assert final_summary["cancelled_distributions"] == database_counts.get("cancelled", 0) == 1
-    assert final_summary["completed_distributions"] == database_counts.get("completed", 0) == 1
+    assert final_summary["available_distributions"] == log_counts.get("available", 0)
+    assert final_summary["cancelled_distributions"] == log_counts.get("cancelled", 0)
+    assert final_summary["completed_distributions"] == log_counts.get("completed", 0)
+    assert log_counts == database_counts
+    completed_records = [
+        record
+        for record in final_summary["distribution_log"]
+        if record["completion_status"] == "completed"
+    ]
+    assert len(completed_records) == 1
+    assert all(
+        record["completion_status"] not in ("available", "cancelled")
+        for record in completed_records
+    )
+    assert final_summary["total_distributions"] == len(final_summary["distribution_log"])
     assert final_summary["total_distributions"] == db_session.query(
         DistributionRecord.id
     ).count() == sum(database_counts.values()) == 3

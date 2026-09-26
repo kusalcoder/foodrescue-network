@@ -269,15 +269,19 @@ def platform_summary() -> dict:
         .all()
     )
 
-    distribution_counts_by_status = dict(
-        db.session.query(
-            DistributionRecord.completion_status,
-            db.func.count(DistributionRecord.id),
-        )
-        .group_by(DistributionRecord.completion_status)
+    distribution_records = (
+        db.session.query(DistributionRecord)
+        .order_by(DistributionRecord.created_at.desc(), DistributionRecord.id.desc())
         .all()
     )
-    total_distributions = sum(distribution_counts_by_status.values())
+    distribution_counts_by_status = {}
+    for record in distribution_records:
+        status = record.completion_status
+        distribution_counts_by_status[status] = (
+            distribution_counts_by_status.get(status, 0) + 1
+        )
+
+    total_distributions = len(distribution_records)
     total_quantity = (
         db.session.query(
             db.func.coalesce(db.func.sum(DistributionRecord.quantity), 0)
@@ -297,4 +301,5 @@ def platform_summary() -> dict:
         "cancelled_distributions": distribution_counts_by_status.get("cancelled", 0),
         "completed_distributions": distribution_counts_by_status.get("completed", 0),
         "total_quantity_distributed": float(total_quantity),
+        "distribution_log": [record.to_dict() for record in distribution_records],
     }
