@@ -14,13 +14,11 @@
   </div>
 
   <div id="no-profile-notice" class="alert alert--info" hidden>
-    <p>You need a provider profile before you can create listings.</p>
-    <p class="text-muted">
-      Provider profile setup doesn't have a page yet (that's a later phase) —
-      for now, create one by sending a <code>POST /api/providers/profile</code>
-      request with your organization details. See <code>PHASE4_SETUP.md</code>
-      for a ready-to-run example.
+    <p style="font-weight: 600; margin-bottom: var(--space-1);">You need a provider profile before you can create listings.</p>
+    <p class="text-muted" style="margin-bottom: var(--space-3);">
+      Complete your organization details (name, contact info, and address) so recipients know who is posting food donations.
     </p>
+    <a href="{{ url_for('frontend.my_profile_page') }}" class="btn btn--primary">Set Up Provider Profile</a>
   </div>
 
   <div id="dashboard" hidden>

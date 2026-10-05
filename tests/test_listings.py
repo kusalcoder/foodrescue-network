@@ -222,7 +222,13 @@ def test_browse_near_me_requires_profile_coordinates(client):
     token, _ = register_and_login(client, email="near-me-no-coords@example.com", role="recipient")
     resp = client.post(
         "/api/recipients/profile",
-        json={"organization_name": "No Coords Org"},
+        json={
+            "organization_name": "No Coords Org",
+            "address": "12 Market St",
+            "city": "Vijayawada",
+            "state": "Andhra Pradesh",
+            "pincode": "520010",
+        },
         headers=auth_headers(token),
     )
     assert resp.status_code == 201
@@ -240,7 +246,7 @@ def test_browse_near_lat_lng_returns_distance_km(client, app):
     recipient = create_recipient(client, app)
 
     resp = client.get(
-        "/api/listings?near_lat=39.80&near_lng=-89.64&radius_km=50",
+        "/api/listings?near_lat=28.61&near_lng=77.20&radius_km=50",
         headers=auth_headers(recipient["token"]),
     )
     assert resp.status_code == 200

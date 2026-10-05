@@ -26,7 +26,7 @@ def _accepted_request(client, app, quantity=50, requested=10):
         json={"listing_id": listing["id"], "requested_quantity": requested},
         headers=auth_headers(recipient["token"]),
     ).get_json()["data"]
-    client.post(f"/api/requests/{req['id']}/accept", headers=auth_headers(provider["token"]))
+    req = client.post(f"/api/requests/{req['id']}/accept", headers=auth_headers(provider["token"])).get_json()["data"]
 
     return provider, listing, recipient, req
 

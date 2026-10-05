@@ -70,9 +70,18 @@ function escapeHtml(str) {
 
   function fillForm(profile) {
     document.getElementById('organization_name').value = profile.organization_name || '';
+    if (document.getElementById('phone')) {
+      document.getElementById('phone').value = profile.phone || profile.contact_info || '';
+    }
     document.getElementById('contact_info').value = profile.contact_info || '';
     document.getElementById('address').value = profile.address || '';
     document.getElementById('city').value = profile.city || '';
+    if (document.getElementById('state')) {
+      document.getElementById('state').value = profile.state || '';
+    }
+    if (document.getElementById('pincode')) {
+      document.getElementById('pincode').value = profile.pincode || '';
+    }
     document.getElementById('latitude').value = profile.latitude != null ? profile.latitude : '';
     document.getElementById('longitude').value = profile.longitude != null ? profile.longitude : '';
     document.getElementById('description').value = profile.description || '';
@@ -104,20 +113,23 @@ function escapeHtml(str) {
   function readForm() {
     const latRaw = document.getElementById('latitude').value;
     const lngRaw = document.getElementById('longitude').value;
+    const phoneVal = document.getElementById('phone') ? document.getElementById('phone').value.trim() : null;
+    const addressVal = document.getElementById('address') ? document.getElementById('address').value.trim() : null;
+    const cityVal = document.getElementById('city') ? document.getElementById('city').value.trim() : null;
+    const stateVal = document.getElementById('state') ? document.getElementById('state').value.trim() : null;
+    const pincodeVal = document.getElementById('pincode') ? document.getElementById('pincode').value.trim() : null;
 
     const payload = {
       organization_name: document.getElementById('organization_name').value.trim(),
-      contact_info: document.getElementById('contact_info').value.trim() || null,
-      address: document.getElementById('address').value.trim() || null,
-      city: document.getElementById('city').value.trim() || null,
+      phone: phoneVal || null,
+      contact_info: document.getElementById('contact_info').value.trim() || phoneVal || null,
+      address: addressVal || null,
+      city: cityVal || null,
+      state: stateVal || null,
+      pincode: pincodeVal || null,
       description: document.getElementById('description').value.trim() || null,
     };
 
-    // Only send latitude/longitude at all when BOTH fields actually
-    // have something in them — a lone value is left out of the
-    // payload entirely (rather than paired with a null) so
-    // validateClientSide below can still tell "only one filled in"
-    // apart from "neither filled in" using the raw field values.
     if (latRaw !== '' && lngRaw !== '') {
       payload.latitude = parseFloat(latRaw);
       payload.longitude = parseFloat(lngRaw);
@@ -130,6 +142,22 @@ function escapeHtml(str) {
     let ok = true;
     if (!payload.organization_name) {
       showFieldError('organization_name', 'Organization name is required.');
+      ok = false;
+    }
+    if (!payload.address) {
+      showFieldError('address', 'Address is required.');
+      ok = false;
+    }
+    if (!payload.city) {
+      showFieldError('city', 'City is required.');
+      ok = false;
+    }
+    if (!payload.state) {
+      showFieldError('state', 'State is required.');
+      ok = false;
+    }
+    if (!payload.pincode) {
+      showFieldError('pincode', 'Pincode is required.');
       ok = false;
     }
     const latRaw = document.getElementById('latitude').value;
@@ -169,6 +197,37 @@ function escapeHtml(str) {
       formEl.hidden = false;
       pageEl.hidden = false;
     }
+  }
+
+  const detectBtn = document.getElementById('detect-location-btn');
+  if (detectBtn) {
+    detectBtn.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        showAlert('Geolocation is not supported by your browser.', 'error');
+        return;
+      }
+      detectBtn.disabled = true;
+      detectBtn.textContent = '📍 Locating…';
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          document.getElementById('latitude').value = pos.coords.latitude.toFixed(6);
+          document.getElementById('longitude').value = pos.coords.longitude.toFixed(6);
+          detectBtn.disabled = false;
+          detectBtn.textContent = '📍 Detect My Current Location';
+          showAlert('Location set to your current coordinates.', 'success');
+        },
+        (err) => {
+          detectBtn.disabled = false;
+          detectBtn.textContent = '📍 Detect My Current Location';
+          let msg = 'Could not detect location. Please enter coordinates manually or allow location access in browser settings.';
+          if (err.code === err.PERMISSION_DENIED) {
+            msg = 'Location permission was denied in browser settings. Please allow access or enter coordinates manually.';
+          }
+          showAlert(msg, 'error');
+        },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+      );
+    });
   }
 
   document.getElementById('profile-form').addEventListener('submit', async (event) => {

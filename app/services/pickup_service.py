@@ -49,9 +49,10 @@ from app.models import (
     PickupRecord,
     PickupStatus,
     RequestStatus,
+    UserRole,
 )
 from app.models.base import utcnow
-from app.services.notification_service import create_notification
+from app.services.notification_service import create_notification, notify_admins
 from app.utils.audit import record_audit_log
 
 ACTIVE_PICKUP_STATUSES = (PickupStatus.SCHEDULED, PickupStatus.CONFIRMED)
@@ -68,6 +69,8 @@ class PickupError(Exception):
 def _parse_optional_datetime(value, field_name):
     if value is None:
         return None
+    if isinstance(value, datetime):
+        return value
     try:
         return datetime.fromisoformat(value)
     except (TypeError, ValueError):
@@ -107,32 +110,27 @@ def _no_other_active_claims(listing_id: int, exclude_request_id: int) -> bool:
     return other_active is None
 
 
-def schedule_pickup(*, request_id: int, provider_profile, data: dict) -> PickupRecord:
+def schedule_pickup(*, request_id: int, provider_profile, data: dict = None) -> PickupRecord:
     """
     Provider schedules a pickup for a request they've accepted.
 
     Body (all optional):
         {"pickup_time": "2026-09-10T18:00:00+00:00", "confirmation_info": "..."}
     """
+    data = data or {}
     food_request = db.session.get(FoodRequest, request_id)
     if food_request is None:
         raise PickupError("Request not found.", "REQUEST_NOT_FOUND", 404)
 
     listing = db.session.get(FoodListing, food_request.listing_id)
+    if listing is None:
+        raise PickupError("Listing not found.", "LISTING_NOT_FOUND", 404)
 
-    if listing.provider_id != provider_profile.id:
+    if provider_profile is None or listing.provider_id != provider_profile.id:
         raise PickupError(
             "You do not have permission to schedule pickup for this request.",
             "FORBIDDEN",
             403,
-        )
-
-    if food_request.status != RequestStatus.ACCEPTED:
-        raise PickupError(
-            f"Only accepted requests can have a pickup scheduled (current status: "
-            f"{food_request.status.value}).",
-            "INVALID_REQUEST_STATE",
-            409,
         )
 
     existing_active = (
@@ -147,6 +145,14 @@ def schedule_pickup(*, request_id: int, provider_profile, data: dict) -> PickupR
         raise PickupError(
             "A pickup is already scheduled for this request.",
             "PICKUP_ALREADY_SCHEDULED",
+            409,
+        )
+
+    if food_request.status != RequestStatus.ACCEPTED:
+        raise PickupError(
+            f"Only accepted requests can have a pickup scheduled (current status: "
+            f"{food_request.status.value}).",
+            "INVALID_REQUEST_STATE",
             409,
         )
 
@@ -181,6 +187,13 @@ def schedule_pickup(*, request_id: int, provider_profile, data: dict) -> PickupR
         related_resource_type="pickup_record",
         related_resource_id=pickup.id,
     )
+    notify_admins(
+        notification_type="pickup_scheduled",
+        title="Pickup scheduled",
+        message=f"Pickup #{pickup.id} was scheduled for {listing.food_name!r}.",
+        related_resource_type="pickup_record",
+        related_resource_id=pickup.id,
+    )
     db.session.commit()
     return pickup
 
@@ -189,7 +202,7 @@ def confirm_pickup(*, pickup_id: int, recipient_profile) -> PickupRecord:
     """Recipient confirms a scheduled pickup time works for them."""
     pickup = _require_pickup(pickup_id)
 
-    if pickup.recipient_id != recipient_profile.id:
+    if recipient_profile is None or pickup.recipient_id != recipient_profile.id:
         raise PickupError(
             "You do not have permission to confirm this pickup.", "FORBIDDEN", 403
         )
@@ -219,20 +232,28 @@ def confirm_pickup(*, pickup_id: int, recipient_profile) -> PickupRecord:
         related_resource_type="pickup_record",
         related_resource_id=pickup.id,
     )
+    notify_admins(
+        notification_type="pickup_confirmed",
+        title="Booking confirmed",
+        message=f"Pickup #{pickup.id} was confirmed by recipient for {pickup.listing.food_name!r}.",
+        related_resource_type="pickup_record",
+        related_resource_id=pickup.id,
+    )
     db.session.commit()
     return pickup
 
 
-def complete_pickup(*, pickup_id: int, provider_profile, data: dict) -> PickupRecord:
+def complete_pickup(*, pickup_id: int, provider_profile, data: dict = None) -> PickupRecord:
     """
     Provider marks the handover as having actually happened. This is
     the one place in the whole system that creates a
     `DistributionRecord` — the permanent, append-only proof that food
     changed hands.
     """
+    data = data or {}
     pickup = _require_pickup(pickup_id)
 
-    if pickup.provider_id != provider_profile.id:
+    if provider_profile is None or pickup.provider_id != provider_profile.id:
         raise PickupError(
             "You do not have permission to complete this pickup.", "FORBIDDEN", 403
         )
@@ -255,6 +276,11 @@ def complete_pickup(*, pickup_id: int, provider_profile, data: dict) -> PickupRe
     food_request.status = RequestStatus.COMPLETED
 
     listing = pickup.listing
+    food_category_val = getattr(listing.category, "value", listing.category)
+    if hasattr(food_category_val, "value"):
+        food_category_val = food_category_val.value
+    food_category_val = str(food_category_val) if food_category_val is not None else None
+
     distribution = DistributionRecord(
         listing_id=listing.id,
         provider_id=pickup.provider_id,
@@ -262,7 +288,7 @@ def complete_pickup(*, pickup_id: int, provider_profile, data: dict) -> PickupRe
         pickup_record_id=pickup.id,
         quantity=food_request.requested_quantity,
         pickup_datetime=pickup.pickup_time,
-        food_category=listing.category.value,
+        food_category=food_category_val,
         completion_status="completed",
     )
     db.session.add(distribution)
@@ -289,19 +315,35 @@ def complete_pickup(*, pickup_id: int, provider_profile, data: dict) -> PickupRe
         related_resource_type="pickup_record",
         related_resource_id=pickup.id,
     )
+    create_notification(
+        user_id=pickup.provider.user_id,
+        notification_type="pickup_completed",
+        title="Food rescue completed",
+        message=f"Delivery and rescue of {listing.food_name!r} was completed.",
+        related_resource_type="pickup_record",
+        related_resource_id=pickup.id,
+    )
+    notify_admins(
+        notification_type="pickup_completed",
+        title="Food rescue completed",
+        message=f"Successful food rescue and delivery completed for {listing.food_name!r} (Distribution #{distribution.id}).",
+        related_resource_type="distribution_record",
+        related_resource_id=distribution.id,
+    )
     db.session.commit()
     return pickup
 
 
-def fail_pickup(*, pickup_id: int, provider_profile, data: dict) -> PickupRecord:
+def fail_pickup(*, pickup_id: int, provider_profile, data: dict = None) -> PickupRecord:
     """
     Provider marks a scheduled/confirmed pickup as failed (e.g. a
     no-show). The request reverts to ACCEPTED so a new pickup can be
     scheduled for it, rather than being stuck or silently dropped.
     """
+    data = data or {}
     pickup = _require_pickup(pickup_id)
 
-    if pickup.provider_id != provider_profile.id:
+    if provider_profile is None or pickup.provider_id != provider_profile.id:
         raise PickupError(
             "You do not have permission to update this pickup.", "FORBIDDEN", 403
         )
@@ -348,7 +390,7 @@ def cancel_pickup(*, pickup_id: int, recipient_profile) -> PickupRecord:
     """
     pickup = _require_pickup(pickup_id)
 
-    if pickup.recipient_id != recipient_profile.id:
+    if recipient_profile is None or pickup.recipient_id != recipient_profile.id:
         raise PickupError(
             "You do not have permission to cancel this pickup.", "FORBIDDEN", 403
         )
@@ -385,20 +427,29 @@ def cancel_pickup(*, pickup_id: int, recipient_profile) -> PickupRecord:
 
 
 def get_pickup_for_viewer(*, pickup_id: int, current_user) -> PickupRecord:
-    """Resource-level authorization: only the owning provider or the
-    owning recipient may view a pickup record."""
+    """Resource-level authorization: only the owning provider, the
+    owning recipient, or an admin may view a pickup record."""
     pickup = _require_pickup(pickup_id)
 
+    if current_user is None:
+        raise PickupError(
+            "You do not have permission to view this pickup record.", "FORBIDDEN", 403
+        )
+
+    is_admin = getattr(current_user, "role", None) == UserRole.ADMIN
+    provider_prof = getattr(current_user, "provider_profile", None)
+    recipient_prof = getattr(current_user, "recipient_profile", None)
+
     is_owning_provider = (
-        current_user.provider_profile is not None
-        and pickup.provider_id == current_user.provider_profile.id
+        provider_prof is not None
+        and pickup.provider_id == provider_prof.id
     )
     is_owning_recipient = (
-        current_user.recipient_profile is not None
-        and pickup.recipient_id == current_user.recipient_profile.id
+        recipient_prof is not None
+        and pickup.recipient_id == recipient_prof.id
     )
 
-    if not (is_owning_provider or is_owning_recipient):
+    if not (is_admin or is_owning_provider or is_owning_recipient):
         raise PickupError(
             "You do not have permission to view this pickup record.", "FORBIDDEN", 403
         )
@@ -408,11 +459,18 @@ def get_pickup_for_viewer(*, pickup_id: int, current_user) -> PickupRecord:
 def list_pickups_query(*, current_user):
     """
     Base (unpaginated) query of pickups belonging to the current
-    user, scoped by whichever profile(s) they have. Returns None if
-    the user has neither a provider nor a recipient profile.
+    user, scoped by whichever profile(s) they have.
+    Returns all pickups if the user is an admin.
+    Returns None if the user has neither a provider nor a recipient profile.
     """
-    provider_profile = current_user.provider_profile
-    recipient_profile = current_user.recipient_profile
+    if current_user is None:
+        return None
+
+    if getattr(current_user, "role", None) == UserRole.ADMIN:
+        return db.session.query(PickupRecord).order_by(PickupRecord.created_at.desc())
+
+    provider_profile = getattr(current_user, "provider_profile", None)
+    recipient_profile = getattr(current_user, "recipient_profile", None)
 
     if provider_profile is None and recipient_profile is None:
         return None

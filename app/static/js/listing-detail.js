@@ -27,12 +27,12 @@ const CATEGORY_LABELS = {
 };
 
 const STATUS_LABELS = {
-  available: 'Available',
-  reserved: 'Reserved',
-  pickup_pending: 'Pickup Pending',
-  collected: 'Collected',
-  expired: 'Expired',
-  cancelled: 'Cancelled',
+  available: 'AVAILABLE',
+  reserved: 'RESERVED',
+  pickup_pending: 'PICKUP PENDING',
+  collected: 'COLLECTED',
+  expired: 'UNAVAILABLE – PICKUP TIME EXPIRED',
+  cancelled: 'CANCELLED',
 };
 
 const REQUEST_STATUS_LABELS = {
@@ -70,8 +70,10 @@ function formatDateTime(dateTimeStr) {
 
 function renderListing(listing) {
   const categoryLabel = CATEGORY_LABELS[listing.category] || listing.category;
-  const statusLabel = STATUS_LABELS[listing.status] || listing.status;
-  const canRequest = listing.status === 'available';
+  const isExpired = listing.status === 'expired' || (listing.pickup_end_time && new Date() >= new Date(listing.pickup_end_time));
+  const statusLabel = isExpired ? 'UNAVAILABLE – PICKUP TIME EXPIRED' : (STATUS_LABELS[listing.status] || listing.status);
+  const badgeClass = isExpired ? 'badge--expired' : `badge--${listing.status}`;
+  const canRequest = listing.status === 'available' && !isExpired;
 
   const mapLink = listing.latitude !== null && listing.longitude !== null
     ? ` &middot; <a href="https://www.google.com/maps/search/?api=1&query=${listing.latitude},${listing.longitude}" target="_blank" rel="noopener">View on map</a>`
@@ -85,10 +87,14 @@ function renderListing(listing) {
     ? `<div class="listing-detail__section"><h3>Pickup conditions</h3><p>${escapeHtml(listing.conditions)}</p></div>`
     : '';
 
+  const unavailableMsg = isExpired
+    ? 'UNAVAILABLE – PICKUP TIME EXPIRED'
+    : 'This listing is no longer available.';
+
   const content = document.getElementById('detail-content');
   content.innerHTML = `
     <div class="listing-detail__header">
-      <span class="badge badge--${listing.status}">${escapeHtml(statusLabel)}</span>
+      <span class="badge ${badgeClass}">${escapeHtml(statusLabel)}</span>
       <span class="text-muted">${escapeHtml(categoryLabel)}</span>
     </div>
     <h1>${escapeHtml(listing.food_name)}</h1>
@@ -104,7 +110,7 @@ function renderListing(listing) {
     ${description}
     ${conditions}
 
-    ${canRequest ? '' : '<p class="text-muted listing-detail__unavailable-note">This listing is no longer available.</p>'}
+    ${canRequest ? '' : `<p class="text-muted listing-detail__unavailable-note" style="color: #c0392b; font-weight: 600;">${escapeHtml(unavailableMsg)}</p>`}
   `;
 }
 

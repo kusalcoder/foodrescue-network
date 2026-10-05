@@ -23,33 +23,41 @@ class ProviderProfileError(Exception):
         self.status_code = status_code
 
 
-def _validate_profile_fields(organization_name, latitude, longitude):
+from app.utils.geo import geocode_address, is_in_india
+
+
+def _validate_profile_fields(organization_name, address, city, state, pincode, latitude, longitude):
     error = validate_name(organization_name)
     if error:
         raise ProviderProfileError(error, "VALIDATION_ERROR", 422)
+
+    if not address or not str(address).strip():
+        raise ProviderProfileError("Address is required.", "VALIDATION_ERROR", 422)
+
+    if not city or not str(city).strip():
+        raise ProviderProfileError("City is required.", "VALIDATION_ERROR", 422)
+
+    if not state or not str(state).strip():
+        raise ProviderProfileError("State is required.", "VALIDATION_ERROR", 422)
+
+    if not pincode or not str(pincode).strip():
+        raise ProviderProfileError("Pincode is required.", "VALIDATION_ERROR", 422)
 
     coord_error = validate_coordinates(latitude, longitude)
     if coord_error:
         raise ProviderProfileError(coord_error, "VALIDATION_ERROR", 422)
 
 
-def create_provider_profile(*, user, data: dict) -> ProviderProfile:
-    """
-    Create the provider profile for the currently authenticated user.
-
-    Raises ProviderProfileError if the user already has a profile
-    (this is a one-time "complete my profile" action; further changes
-    go through `update_provider_profile`), or if the user isn't
-    actually a PROVIDER.
-    """
-    if user.role != UserRole.PROVIDER:
+def create_provider_profile(*, user, data: dict = None) -> ProviderProfile:
+    data = data or {}
+    if user is None or getattr(user, "role", None) != UserRole.PROVIDER:
         raise ProviderProfileError(
             "Only provider accounts can create a provider profile.",
             "FORBIDDEN",
             403,
         )
 
-    if user.provider_profile is not None:
+    if getattr(user, "provider_profile", None) is not None:
         raise ProviderProfileError(
             "A provider profile already exists for this account. Use update instead.",
             "PROFILE_ALREADY_EXISTS",
@@ -57,16 +65,29 @@ def create_provider_profile(*, user, data: dict) -> ProviderProfile:
         )
 
     organization_name = data.get("organization_name")
+    address = data.get("address")
+    city = data.get("city")
+    state = data.get("state")
+    pincode = data.get("pincode")
     latitude = data.get("latitude")
     longitude = data.get("longitude")
-    _validate_profile_fields(organization_name, latitude, longitude)
+    _validate_profile_fields(organization_name, address, city, state, pincode, latitude, longitude)
 
+    if latitude is None or longitude is None:
+        geo_lat, geo_lng = geocode_address(address, city, state, pincode)
+        if geo_lat is not None and geo_lng is not None:
+            latitude, longitude = geo_lat, geo_lng
+
+    phone_val = data.get("phone") or data.get("contact_info")
     profile = ProviderProfile(
         user_id=user.id,
-        organization_name=organization_name.strip(),
-        contact_info=data.get("contact_info"),
-        address=data.get("address"),
-        city=data.get("city"),
+        organization_name=organization_name.strip() if isinstance(organization_name, str) else "",
+        contact_info=data.get("contact_info") or phone_val,
+        phone=phone_val,
+        address=address.strip() if isinstance(address, str) else address,
+        city=city.strip() if isinstance(city, str) else city,
+        state=state.strip() if isinstance(state, str) else state,
+        pincode=pincode.strip() if isinstance(pincode, str) else pincode,
         latitude=latitude,
         longitude=longitude,
         description=data.get("description"),
@@ -85,9 +106,10 @@ def create_provider_profile(*, user, data: dict) -> ProviderProfile:
     return profile
 
 
-def update_provider_profile(*, user, data: dict) -> ProviderProfile:
+def update_provider_profile(*, user, data: dict = None) -> ProviderProfile:
     """Update the currently authenticated provider's own profile."""
-    profile = user.provider_profile
+    data = data or {}
+    profile = getattr(user, "provider_profile", None) if user else None
     if profile is None:
         raise ProviderProfileError(
             "No provider profile exists yet for this account. Create one first.",
@@ -96,14 +118,35 @@ def update_provider_profile(*, user, data: dict) -> ProviderProfile:
         )
 
     organization_name = data.get("organization_name", profile.organization_name)
+    address = data.get("address", profile.address)
+    city = data.get("city", profile.city)
+    state = data.get("state", profile.state)
+    pincode = data.get("pincode", profile.pincode)
     latitude = data.get("latitude", profile.latitude)
     longitude = data.get("longitude", profile.longitude)
-    _validate_profile_fields(organization_name, latitude, longitude)
+    _validate_profile_fields(organization_name, address, city, state, pincode, latitude, longitude)
 
-    profile.organization_name = organization_name.strip()
+    if latitude is None or longitude is None or ("address" in data or "city" in data or "state" in data):
+        if "latitude" not in data and "longitude" not in data:
+            geo_lat, geo_lng = geocode_address(address, city, state, pincode)
+            if geo_lat is not None and geo_lng is not None:
+                latitude, longitude = geo_lat, geo_lng
+
+    if isinstance(organization_name, str):
+        profile.organization_name = organization_name.strip()
     profile.contact_info = data.get("contact_info", profile.contact_info)
-    profile.address = data.get("address", profile.address)
-    profile.city = data.get("city", profile.city)
+    if "phone" in data:
+        profile.phone = data.get("phone")
+    elif "contact_info" in data and not profile.phone:
+        profile.phone = data.get("contact_info")
+    if isinstance(address, str):
+        profile.address = address.strip()
+    if isinstance(city, str):
+        profile.city = city.strip()
+    if isinstance(state, str):
+        profile.state = state.strip()
+    if isinstance(pincode, str):
+        profile.pincode = pincode.strip()
     profile.latitude = latitude
     profile.longitude = longitude
     profile.description = data.get("description", profile.description)

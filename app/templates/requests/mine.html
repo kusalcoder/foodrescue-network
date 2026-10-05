@@ -14,13 +14,11 @@
   </div>
 
   <div id="no-profile-notice" class="alert alert--info" hidden>
-    <p>You need a recipient profile before you can request food.</p>
-    <p class="text-muted">
-      Recipient profile setup doesn't have a page yet (that's a later phase) —
-      for now, create one by sending a <code>POST /api/recipients/profile</code>
-      request with your organization details. See <code>PHASE5_SETUP.md</code>
-      for a ready-to-run example.
+    <p style="font-weight: 600; margin-bottom: var(--space-1);">You need a recipient profile before you can request food.</p>
+    <p class="text-muted" style="margin-bottom: var(--space-3);">
+      Complete your organization details (name, contact info, and address) so providers know who is requesting their listings.
     </p>
+    <a href="{{ url_for('frontend.my_profile_page') }}" class="btn btn--primary">Set Up Recipient Profile</a>
   </div>
 
   <div id="dashboard" hidden>

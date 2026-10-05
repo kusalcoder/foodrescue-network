@@ -24,12 +24,12 @@ const CATEGORY_LABELS = {
 };
 
 const STATUS_LABELS = {
-  available: 'Available',
-  reserved: 'Reserved',
-  pickup_pending: 'Pickup Pending',
-  collected: 'Collected',
-  expired: 'Expired',
-  cancelled: 'Cancelled',
+  available: 'AVAILABLE',
+  reserved: 'RESERVED',
+  pickup_pending: 'PICKUP PENDING',
+  collected: 'COLLECTED',
+  expired: 'UNAVAILABLE – PICKUP TIME EXPIRED',
+  cancelled: 'CANCELLED',
 };
 
 function escapeHtml(str) {
@@ -54,8 +54,10 @@ function formatTime(dateTimeStr) {
 
 function listingCardHtml(listing) {
   const categoryLabel = CATEGORY_LABELS[listing.category] || listing.category;
-  const statusLabel = STATUS_LABELS[listing.status] || listing.status;
-  const canManage = listing.status === 'available';
+  const isExpired = listing.status === 'expired' || (listing.pickup_end_time && new Date() >= new Date(listing.pickup_end_time));
+  const statusLabel = isExpired ? 'UNAVAILABLE – PICKUP TIME EXPIRED' : (STATUS_LABELS[listing.status] || listing.status);
+  const badgeClass = isExpired ? 'badge--expired' : `badge--${listing.status}`;
+  const canManage = listing.status === 'available' && !isExpired;
 
   const editBtn = canManage
     ? `<a class="btn btn--secondary" href="/listings/${listing.id}/edit">Edit</a>`

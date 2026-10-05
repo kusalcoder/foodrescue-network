@@ -1,4 +1,4 @@
-﻿/**
+/**
  * FoodRescue Network — "My Requests" recipient dashboard (Phase 5)
  *
  * Renders GET /api/requests (no pagination — every request the
@@ -57,12 +57,44 @@ function requestCardHtml(req) {
   const statusLabel = REQUEST_STATUS_LABELS[req.status] || req.status;
   const badgeClass = REQUEST_BADGE_CLASS[req.status] || req.status;
   const canCancel = req.status === 'pending' || req.status === 'accepted';
-  // Phase 7: once a pickup exists for this request, its own
-  // lifecycle (confirm/cancel/etc.) lives on /pickups, not here.
   const hasPickup = req.status === 'pickup_pending' || req.status === 'completed';
+  const isConfirmed = req.status === 'accepted' || req.status === 'pickup_pending' || req.status === 'completed';
+
+  const listingTitle = (req.listing && req.listing.food_name)
+    ? escapeHtml(req.listing.food_name)
+    : `Listing #${req.listing_id}`;
+  const quantityUnit = (req.listing && req.listing.quantity_unit) ? ` ${escapeHtml(req.listing.quantity_unit)}` : '';
+
   const message = req.request_message
     ? `<p class="listing-card__desc">"${escapeHtml(req.request_message)}"</p>`
     : '';
+
+  let contactBlock = '';
+  if (isConfirmed && req.listing) {
+    const pName = req.listing.provider_name || 'Food Provider';
+    const pPhone = req.listing.provider_phone;
+    const pEmail = req.listing.provider_email;
+    const pLocation = req.listing.pickup_location;
+    const pLat = req.listing.latitude;
+    const pLng = req.listing.longitude;
+
+    const mapDirections = (pLat && pLng)
+      ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${pLat},${pLng}" target="_blank" class="contact-link" style="color:#2563eb;">🗺️ Get Directions</a>`
+      : '';
+
+    contactBlock = `
+      <div class="contact-box">
+        <h4>Provider & Pickup Details:</h4>
+        <p style="margin: 0 0 0.25rem 0;"><strong>🏢 ${escapeHtml(pName)}</strong></p>
+        <p style="margin: 0 0 0.4rem 0;">📍 ${escapeHtml(pLocation || 'Location on file')}</p>
+        <div class="contact-links">
+          ${pPhone ? `<a href="tel:${escapeHtml(pPhone)}" class="contact-link">📞 ${escapeHtml(pPhone)}</a>` : ''}
+          ${pEmail ? `<a href="mailto:${escapeHtml(pEmail)}" class="contact-link">✉️ ${escapeHtml(pEmail)}</a>` : ''}
+          ${mapDirections}
+        </div>
+      </div>
+    `;
+  }
 
   const cancelBtn = canCancel
     ? `<button type="button" class="btn btn--danger" data-cancel-id="${req.id}">Cancel Request</button>`
@@ -77,12 +109,13 @@ function requestCardHtml(req) {
         <span class="badge badge--${badgeClass}">${escapeHtml(statusLabel)}</span>
         <span class="text-muted listing-card__category">Requested ${formatDateTime(req.requested_at)}</span>
       </div>
-      <h3><a href="/listings/${req.listing_id}">Listing #${req.listing_id}</a></h3>
+      <h3><a href="/listings/${req.listing_id}">${listingTitle}</a></h3>
       ${message}
       <ul class="listing-card__meta">
-        <li>${req.requested_quantity} requested</li>
+        <li><strong>${req.requested_quantity}${quantityUnit}</strong> requested</li>
       </ul>
-      <div class="listing-card__actions">
+      ${contactBlock}
+      <div class="listing-card__actions" style="margin-top: var(--space-3);">
         <a class="btn btn--secondary" href="/listings/${req.listing_id}">View Listing</a>
         ${pickupLink}
         ${cancelBtn}

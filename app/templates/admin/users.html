@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Manage Users — FoodRescue Network{% endblock %}
+{% block title %}Manage Users & Organizations — Help With Food{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
@@ -16,19 +16,25 @@
 </div>
 
 <section id="users-page" hidden>
-  <h1>Manage Users</h1>
+  <h1>Manage Users & Organizations</h1>
 
   <nav class="admin-subnav" aria-label="Admin">
-    <a href="{{ url_for('frontend.admin_verify_recipient_page') }}">Verify Recipient</a>
     <a href="{{ url_for('frontend.admin_users_page') }}" class="is-active">Manage Users</a>
+    <a href="{{ url_for('frontend.admin_verify_recipient_page') }}">Verify Recipient</a>
     <a href="{{ url_for('frontend.admin_audit_log_page') }}">Audit Log</a>
     <a href="{{ url_for('frontend.admin_reports_page') }}">Reports</a>
   </nav>
 
   <div id="page-alert"></div>
 
+  <div class="tabs-nav" style="margin-top: var(--space-4);">
+    <button type="button" class="tab-btn is-active" data-admin-tab="all">All Accounts</button>
+    <button type="button" class="tab-btn" data-admin-tab="provider">Food Providers</button>
+    <button type="button" class="tab-btn" data-admin-tab="recipient">Orphanages & Receivers</button>
+  </div>
+
   <div class="form-row admin-filters">
-    <div class="form-field">
+    <div class="form-field" id="role-field-wrap">
       <label for="role-filter">Role</label>
       <select id="role-filter">
         <option value="">All roles</option>
@@ -38,7 +44,7 @@
       </select>
     </div>
     <div class="form-field">
-      <label for="status-filter">Status</label>
+      <label for="status-filter">Account Status</label>
       <select id="status-filter">
         <option value="">All statuses</option>
         <option value="active">Active</option>
@@ -46,8 +52,8 @@
       </select>
     </div>
     <div class="form-field">
-      <label for="search-filter">Search (name or email)</label>
-      <input type="search" id="search-filter" placeholder="e.g. jane@example.com">
+      <label for="search-filter">Search (name, email, city)</label>
+      <input type="search" id="search-filter" placeholder="Search accounts…">
     </div>
   </div>
 
@@ -58,9 +64,10 @@
       <thead>
         <tr>
           <th>ID</th>
-          <th>Name</th>
-          <th>Email</th>
+          <th>Name / Organization</th>
+          <th>Contact (Phone & Email)</th>
           <th>Role</th>
+          <th>City / Address</th>
           <th>Status</th>
           <th>Joined</th>
           <th>Actions</th>

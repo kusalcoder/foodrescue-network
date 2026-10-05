@@ -18,12 +18,12 @@
   }
 
   const STATUS_LABELS = {
-    available: 'Available',
-    reserved: 'Reserved',
-    pickup_pending: 'Pickup Pending',
-    collected: 'Collected',
-    expired: 'Expired',
-    cancelled: 'Cancelled',
+    available: 'AVAILABLE',
+    reserved: 'RESERVED',
+    pickup_pending: 'PICKUP PENDING',
+    collected: 'COLLECTED',
+    expired: 'UNAVAILABLE – PICKUP TIME EXPIRED',
+    cancelled: 'CANCELLED',
   };
 
   const CATEGORY_LABELS = {

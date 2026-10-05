@@ -27,7 +27,13 @@ def test_provider_cannot_create_two_profiles(client):
     fx = create_provider(client)
     resp = client.post(
         "/api/providers/profile",
-        json={"organization_name": "Second Attempt"},
+        json={
+            "organization_name": "Second Attempt",
+            "address": "12 Market St",
+            "city": "Vijayawada",
+            "state": "Andhra Pradesh",
+            "pincode": "520010",
+        },
         headers=auth_headers(fx["token"]),
     )
     assert resp.status_code == 409
@@ -50,7 +56,13 @@ def test_recipient_cannot_create_provider_profile(client):
     token, _ = register_and_login(client, email="rcpt-not-provider@example.com", role="recipient")
     resp = client.post(
         "/api/providers/profile",
-        json={"organization_name": "Should Not Work"},
+        json={
+            "organization_name": "Should Not Work",
+            "address": "12 Market St",
+            "city": "Vijayawada",
+            "state": "Andhra Pradesh",
+            "pincode": "520010",
+        },
         headers=auth_headers(token),
     )
     assert resp.status_code == 403
@@ -76,7 +88,13 @@ def test_provider_cannot_create_recipient_profile(client):
     fx = create_provider(client, email="prov-not-rcpt@example.com")
     resp = client.post(
         "/api/recipients/profile",
-        json={"organization_name": "Should Not Work"},
+        json={
+            "organization_name": "Should Not Work",
+            "address": "12 Market St",
+            "city": "Vijayawada",
+            "state": "Andhra Pradesh",
+            "pincode": "520010",
+        },
         headers=auth_headers(fx["token"]),
     )
     assert resp.status_code == 403

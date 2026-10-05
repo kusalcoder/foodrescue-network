@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Find Food Providers & Donors — Help With Food{% endblock %}
+
+{% block content %}
+<section class="listings-page" data-page="providers-directory">
+  <div class="listings-page__header">
+    <div>
+      <h1>Food Providers & Donors</h1>
+      <p class="text-muted">Search and connect with registered food providers, restaurants, grocers, and caterers.</p>
+    </div>
+    <div>
+      <a href="{{ url_for('frontend.map_page') }}" class="btn btn--secondary">🗺️ View on Map</a>
+    </div>
+  </div>
+
+  <div class="search-hero">
+    <form id="provider-search-form" class="search-hero-form" novalidate>
+      <div class="form-field">
+        <label for="provider-search-input">Search Providers</label>
+        <input type="search" id="provider-search-input" placeholder="Search by restaurant name, food, or keywords…">
+      </div>
+      <div class="form-field" style="max-width: 200px;">
+        <label for="provider-city-input">City</label>
+        <input type="text" id="provider-city-input" placeholder="e.g. Springfield">
+      </div>
+      <div class="search-btn-wrap">
+        <button type="submit" class="btn btn--primary">Search Providers</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="providers-alert"></div>
+  <p id="providers-loading" class="text-muted">Loading providers…</p>
+  <p id="providers-empty" class="text-muted" hidden>No providers match your search.</p>
+
+  <div id="providers-grid" class="cards listings-grid" hidden></div>
+
+  <div id="providers-pagination" class="pagination" style="display: flex; justify-content: center; gap: var(--space-3); margin-top: var(--space-4);" hidden>
+    <button type="button" id="prev-page-btn" class="btn btn--secondary">← Previous</button>
+    <span id="page-indicator" style="align-self: center; font-weight: 500;">Page 1</span>
+    <button type="button" id="next-page-btn" class="btn btn--secondary">Next →</button>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/providers-search.js') }}"></script>
+{% endblock %}

@@ -52,11 +52,31 @@ function renderAuthArea() {
 }
 
 function applyRoleVisibility(user) {
+  if (user && user.role) {
+    document.body.dataset.userRole = user.role;
+  } else {
+    delete document.body.dataset.userRole;
+  }
+
   document.querySelectorAll('[data-role-only]').forEach((el) => {
     const allowedRoles = el.dataset.roleOnly.split(',').map((r) => r.trim());
     el.hidden = !(user && allowedRoles.includes(user.role));
   });
+  document.querySelectorAll('[data-role-hide]').forEach((el) => {
+    const hiddenRoles = el.dataset.roleHide.split(',').map((r) => r.trim());
+    el.hidden = Boolean(user && hiddenRoles.includes(user.role));
+  });
 }
+
+// Immediate initial sync for body role attribute before DOMContentLoaded
+try {
+  if (typeof Auth !== 'undefined' && Auth.isLoggedIn()) {
+    const u = Auth.getUser();
+    if (u && u.role) {
+      document.body.dataset.userRole = u.role;
+    }
+  }
+} catch (e) {}
 
 async function handleLogout() {
   try {

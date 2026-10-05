@@ -52,22 +52,70 @@ function escapeHtml(str) {
     return isNaN(d) ? String(u.created_at) : d.toLocaleDateString();
   }
 
+  const tabBtns = document.querySelectorAll('[data-admin-tab]');
+  let activeTabRole = '';
+
+  tabBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach((b) => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      const tabVal = btn.dataset.adminTab;
+      activeTabRole = tabVal === 'all' ? '' : tabVal;
+      document.getElementById('role-filter').value = activeTabRole;
+      currentPage = 1;
+      load();
+    });
+  });
+
   function renderRow(u) {
     const status = u.status; // "active" | "inactive"
     const badgeClass = status === 'active' ? 'badge--success' : 'badge--muted';
     const nextAction = status === 'active' ? 'deactivate' : 'activate';
     const actionLabel = status === 'active' ? 'Deactivate' : 'Activate';
 
+    const profile = u.provider_profile || u.recipient_profile;
+    const orgName = profile && profile.organization_name ? profile.organization_name : u.name;
+    const phone = profile ? (profile.phone || profile.contact_info) : '';
+    const email = u.email;
+    const address = profile ? [profile.address, profile.city].filter(Boolean).join(', ') : '—';
+
+    let vBadge = '';
+    let verifyBtn = '';
+    if (u.role === 'recipient') {
+      const vStatus = (profile && profile.verification_status) || 'pending';
+      const vClass = vStatus === 'verified' ? 'badge--available' : (vStatus === 'rejected' ? 'badge--cancelled' : 'badge--pending');
+      vBadge = `<div><span class="badge ${vClass}" style="font-size:0.75rem; margin-top: 0.2rem;">${vStatus}</span></div>`;
+
+      if (vStatus === 'pending' && profile && profile.id) {
+        verifyBtn = `<button type="button" class="btn btn--primary btn--small" data-verify-recipient="${profile.id}">Verify</button>`;
+      }
+    }
+
+    const contactHtml = `
+      <div style="font-size:0.88rem;">
+        ${phone ? `<div>📞 <a href="tel:${escapeHtml(phone)}">${escapeHtml(phone)}</a></div>` : ''}
+        <div>✉️ <a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></div>
+      </div>
+    `;
+
     return `
       <tr data-user-id="${escapeHtml(u.id)}">
         <td>${escapeHtml(u.id)}</td>
-        <td>${escapeHtml(u.name)}</td>
-        <td>${escapeHtml(u.email)}</td>
-        <td>${escapeHtml(u.role)}</td>
-        <td><span class="badge ${badgeClass}">${escapeHtml(status)}</span></td>
-        <td>${escapeHtml(fieldJoined(u))}</td>
         <td>
-          <button type="button" class="btn btn--secondary btn--small" data-toggle-action="${nextAction}">${actionLabel}</button>
+          <strong>${escapeHtml(orgName)}</strong>
+          ${u.name !== orgName ? `<div class="text-muted" style="font-size:0.82rem;">Owner: ${escapeHtml(u.name)}</div>` : ''}
+          ${vBadge}
+        </td>
+        <td>${contactHtml}</td>
+        <td><span class="badge badge--collected">${escapeHtml(u.role)}</span></td>
+        <td style="font-size:0.88rem;">${escapeHtml(address)}</td>
+        <td><span class="badge ${badgeClass}">${escapeHtml(status)}</span></td>
+        <td style="font-size:0.85rem;">${escapeHtml(fieldJoined(u))}</td>
+        <td>
+          <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+            ${verifyBtn}
+            <button type="button" class="btn btn--secondary btn--small" data-toggle-action="${nextAction}">${actionLabel}</button>
+          </div>
         </td>
       </tr>`;
   }
@@ -78,9 +126,8 @@ function escapeHtml(str) {
     if (btn) { btn.disabled = true; btn.textContent = '…'; }
 
     try {
-      // Real endpoints: POST /api/admin/users/<id>/activate or /deactivate
       await Api.post(`/api/admin/users/${userId}/${action}`);
-      showAlert(`User #${userId} ${action}d.`, 'success');
+      showAlert(`User #${userId} ${action}d successfully.`, 'success');
       load();
     } catch (err) {
       if (err.status === 401) { window.location.href = '/login'; return; }
@@ -89,6 +136,18 @@ function escapeHtml(str) {
         btn.disabled = false;
         btn.textContent = action === 'activate' ? 'Activate' : 'Deactivate';
       }
+    }
+  }
+
+  async function verifyRecipient(recipientProfileId, btn) {
+    if (btn) { btn.disabled = true; btn.textContent = '…'; }
+    try {
+      await Api.post(`/api/recipients/${recipientProfileId}/verify`);
+      showAlert(`Recipient profile #${recipientProfileId} verified successfully.`, 'success');
+      load();
+    } catch (err) {
+      showAlert(err.message || 'Could not verify recipient profile.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Verify'; }
     }
   }
 
@@ -146,11 +205,19 @@ function escapeHtml(str) {
   document.getElementById('next-page').addEventListener('click', () => { currentPage++; load(); });
 
   document.getElementById('users-tbody').addEventListener('click', (event) => {
-    const btn = event.target.closest('[data-toggle-action]');
-    if (!btn) return;
-    const row = btn.closest('tr');
-    const userId = row.getAttribute('data-user-id');
-    toggleUser(userId, btn.getAttribute('data-toggle-action'));
+    const toggleBtn = event.target.closest('[data-toggle-action]');
+    if (toggleBtn) {
+      const row = toggleBtn.closest('tr');
+      const userId = row.getAttribute('data-user-id');
+      toggleUser(userId, toggleBtn.getAttribute('data-toggle-action'));
+      return;
+    }
+
+    const verifyBtn = event.target.closest('[data-verify-recipient]');
+    if (verifyBtn) {
+      const recipientId = verifyBtn.getAttribute('data-verify-recipient');
+      verifyRecipient(recipientId, verifyBtn);
+    }
   });
 
   load();

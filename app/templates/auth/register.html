@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Register — FoodRescue Network{% endblock %}
+{% block title %}Register — Help With Food{% endblock %}
 
 {% block content %}
 <section class="auth-page">
   <h1>Create an account</h1>
   <p class="text-muted">
-    Register as a food provider (restaurant, grocer, caterer) or a
-    recipient organization (shelter, food bank, community group).
+    Register as a food provider (restaurant, grocer, caterer, donor) or a
+    recipient organization / orphanage (orphanage, shelter, food bank, charity).
   </p>
 
   <div id="form-alert"></div>
@@ -27,7 +27,15 @@
 
     <div class="form-field">
       <label for="password">Password</label>
-      <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password">
+      <div class="password-input-wrap">
+        <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password">
+        <button type="button" class="password-toggle-btn" data-toggle-target="password" aria-label="Show password" title="Show password">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+      </div>
       <p class="text-muted" style="margin: 0.25rem 0 0; font-size: 0.85rem;">
         At least 8 characters, with both letters and numbers.
       </p>
@@ -38,8 +46,8 @@
       <label for="role">I am registering as a...</label>
       <select id="role" name="role" required>
         <option value="" disabled selected>Select one</option>
-        <option value="provider">Food Provider</option>
-        <option value="recipient">Recipient Organization</option>
+        <option value="provider">Food Provider / Donor</option>
+        <option value="recipient">Recipient Organization / Orphanage</option>
       </select>
       <div class="field-error" data-error-for="role"></div>
     </div>

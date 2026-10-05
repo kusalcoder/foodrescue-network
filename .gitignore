@@ -12,4 +12,5 @@ uploads/*
 *.sqlite3
 *.bak
 *.log
+*.dump
 .vscode/

@@ -76,6 +76,21 @@ def _init_extensions(app: Flask) -> None:
 
     with app.app_context():
         import app.models  # noqa: F401  (registers models with SQLAlchemy)
+        try:
+            from sqlalchemy import text
+            with db.engine.connect() as conn:
+                conn.execute(text("ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS phone VARCHAR(50);"))
+                conn.execute(text("ALTER TABLE recipient_profiles ADD COLUMN IF NOT EXISTS phone VARCHAR(50);"))
+                conn.execute(text("ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS state VARCHAR(100);"))
+                conn.execute(text("ALTER TABLE recipient_profiles ADD COLUMN IF NOT EXISTS state VARCHAR(100);"))
+                conn.execute(text("ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS pincode VARCHAR(20);"))
+                conn.execute(text("ALTER TABLE recipient_profiles ADD COLUMN IF NOT EXISTS pincode VARCHAR(20);"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_provider_profiles_state ON provider_profiles (state);"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_recipient_profiles_state ON recipient_profiles (state);"))
+                conn.commit()
+        except Exception:
+            pass
+
 
 
 def _configure_logging(app: Flask) -> None:

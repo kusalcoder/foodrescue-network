@@ -11,7 +11,7 @@ from app.extensions import db
 from app.models import FoodCategory, FoodListing, ListingStatus, ProviderProfile
 from app.models.base import utcnow
 from app.utils.audit import record_audit_log
-from app.utils.geo import haversine_km
+from app.utils.geo import haversine_km, validate_india_location
 from app.utils.validation import validate_coordinates, validate_positive_number
 
 VALID_CATEGORIES = {c.value for c in FoodCategory}
@@ -77,6 +77,15 @@ def _validate_listing_fields(data: dict):
     coord_error = validate_coordinates(data.get("latitude"), data.get("longitude"))
     if coord_error:
         raise ListingError(coord_error, "VALIDATION_ERROR", 422)
+
+    india_error = validate_india_location(
+        data.get("latitude"),
+        data.get("longitude"),
+        country=data.get("country"),
+        address=data.get("pickup_location"),
+    )
+    if india_error:
+        raise ListingError(india_error, "INVALID_LOCATION", 422)
 
     available_date = _parse_date(data.get("available_date"), "available_date")
     pickup_start = _parse_datetime(data.get("pickup_start_time"), "pickup_start_time")
@@ -237,7 +246,24 @@ def get_owned_listing(*, listing_id: int, provider_profile) -> FoodListing:
     return _require_owned_listing(listing_id, provider_profile)
 
 
+def auto_expire_listings():
+    """
+    Automatically sweep database and update status to EXPIRED for all AVAILABLE
+    food listings whose pickup_end_time <= utcnow().
+    """
+    now = utcnow()
+    try:
+        db.session.query(FoodListing).filter(
+            FoodListing.status == ListingStatus.AVAILABLE,
+            FoodListing.pickup_end_time <= now
+        ).update({FoodListing.status: ListingStatus.EXPIRED}, synchronize_session=False)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+
 def list_own_listings(*, provider_profile):
+    auto_expire_listings()
     return (
         db.session.query(FoodListing)
         .filter_by(provider_id=provider_profile.id)
@@ -247,42 +273,29 @@ def list_own_listings(*, provider_profile):
 
 
 def browse_listings_query(*, filters: dict):
-    """
-    Build (but don't execute) the SQLAlchemy query for public/
-    recipient browsing (spec sections 18/20).
-
-    By default, only shows listings that are:
-        - status = AVAILABLE (nothing reserved/collected/cancelled/expired)
-        - pickup_end_time still in the future (a simple, always-on
-          safety net so listings that should already be expired never
-          show up while waiting for a dedicated expiry sweep, added
-          in a later phase)
-
-    Supported filters (all optional):
-        category      — exact match against FoodCategory value
-        city           — case-insensitive match against the
-                         provider's city
-        provider_id    — exact match
-        available_date — exact date (YYYY-MM-DD)
-        status         — override the default AVAILABLE-only filter
-                         (e.g. an admin reviewing all statuses)
-
-    Returns a SQLAlchemy Query object; the caller applies pagination
-    and ordering-independent concerns on top (see paginate_query).
-    """
+    auto_expire_listings()
     query = db.session.query(FoodListing).join(
         ProviderProfile, FoodListing.provider_id == ProviderProfile.id
     )
 
     status_filter = filters.get("status")
     if status_filter:
-        if status_filter not in {s.value for s in ListingStatus}:
-            raise ListingError(
-                f"Status must be one of: {', '.join(s.value for s in ListingStatus)}.",
-                "VALIDATION_ERROR",
-                422,
+        if status_filter == "active":
+            query = query.filter(
+                FoodListing.status.in_([
+                    ListingStatus.AVAILABLE,
+                    ListingStatus.RESERVED,
+                    ListingStatus.PICKUP_PENDING,
+                ])
             )
-        query = query.filter(FoodListing.status == ListingStatus(status_filter))
+        else:
+            if status_filter not in {s.value for s in ListingStatus}:
+                raise ListingError(
+                    f"Status must be one of: active, {', '.join(s.value for s in ListingStatus)}.",
+                    "VALIDATION_ERROR",
+                    422,
+                )
+            query = query.filter(FoodListing.status == ListingStatus(status_filter))
     else:
         query = query.filter(FoodListing.status == ListingStatus.AVAILABLE)
         query = query.filter(FoodListing.pickup_end_time > utcnow())

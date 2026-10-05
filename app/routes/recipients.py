@@ -168,3 +168,55 @@ def nearby_providers():
         "Nearby providers with available listings retrieved successfully.",
         data={"providers": providers_data, "pagination": pagination},
     )
+
+
+@recipients_bp.route("", methods=["GET"])
+def list_recipients():
+    """
+    GET /api/recipients — search and list available orphanages/recipients.
+    Query parameters:
+        search: case-insensitive search in org name, city, address, description
+        city: filter by city
+        verified_only: 'true' (default: false)
+        page, limit: standard pagination
+    """
+    from app.extensions import db
+    from app.models import RecipientProfile, VerificationStatus
+    from app.utils.pagination import paginate_query
+
+    query = db.session.query(RecipientProfile)
+
+    verified_only = request.args.get("verified_only", "false").lower() == "true"
+    if verified_only:
+        query = query.filter(RecipientProfile.verification_status == VerificationStatus.VERIFIED)
+
+    search = request.args.get("search", "").strip()
+    if search:
+        pattern = f"%{search.lower()}%"
+        query = query.filter(
+            db.or_(
+                db.func.lower(RecipientProfile.organization_name).like(pattern),
+                db.func.lower(RecipientProfile.city).like(pattern),
+                db.func.lower(RecipientProfile.state).like(pattern),
+                db.func.lower(RecipientProfile.address).like(pattern),
+                db.func.lower(RecipientProfile.description).like(pattern),
+            )
+        )
+
+    city = request.args.get("city", "").strip()
+    if city:
+        query = query.filter(db.func.lower(RecipientProfile.city) == city.lower())
+
+    state = request.args.get("state", "").strip()
+    if state:
+        query = query.filter(db.func.lower(RecipientProfile.state) == state.lower())
+
+    query = query.order_by(RecipientProfile.organization_name.asc())
+    page, limit = get_pagination_params(request.args)
+    items, pagination = paginate_query(query, page, limit)
+
+    return success_response(
+        "Recipients retrieved successfully.",
+        data={"recipients": [r.to_dict() for r in items], "pagination": pagination},
+    )
+

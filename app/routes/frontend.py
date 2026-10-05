@@ -152,3 +152,19 @@ def admin_audit_log_page():
 @frontend_bp.route("/admin/reports")
 def admin_reports_page():
     return render_template("admin/reports.html")
+
+
+@frontend_bp.route("/providers")
+def providers_page():
+    return render_template("providers/index.html")
+
+
+@frontend_bp.route("/orphanages")
+def orphanages_page():
+    return render_template("recipients/index.html")
+
+
+@frontend_bp.route("/map")
+def map_page():
+    return render_template("map/index.html")
+

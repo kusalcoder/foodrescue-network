@@ -15,8 +15,9 @@ don't "helpfully" add a food-safety score column.
 
 import enum
 
+from datetime import timezone
 from app.extensions import db
-from app.models.base import TimestampMixin
+from app.models.base import TimestampMixin, utcnow
 
 
 class FoodCategory(enum.Enum):
@@ -116,8 +117,28 @@ class FoodListing(db.Model, TimestampMixin):
         ),
     )
 
+    def check_and_update_expiry(self) -> bool:
+        """
+        Check if the current UTC time has reached or passed pickup_end_time.
+        If status is AVAILABLE, update status to EXPIRED.
+        Returns True if listing is EXPIRED.
+        """
+        if self.pickup_end_time:
+            now = utcnow()
+            end_time = self.pickup_end_time
+            if end_time.tzinfo is None and now.tzinfo is not None:
+                end_time = end_time.replace(tzinfo=timezone.utc)
+            elif end_time.tzinfo is not None and now.tzinfo is None:
+                now = now.replace(tzinfo=timezone.utc)
+
+            if now >= end_time and self.status == ListingStatus.AVAILABLE:
+                self.status = ListingStatus.EXPIRED
+                return True
+        return self.status == ListingStatus.EXPIRED
+
     def to_dict(self):
-        return {
+        self.check_and_update_expiry()
+        res = {
             "id": self.id,
             "provider_id": self.provider_id,
             "food_name": self.food_name,
@@ -142,6 +163,16 @@ class FoodListing(db.Model, TimestampMixin):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+        if self.provider:
+            res["provider"] = {
+                "id": self.provider.id,
+                "organization_name": self.provider.organization_name,
+                "phone": getattr(self.provider, "phone", None) or self.provider.contact_info,
+                "city": self.provider.city,
+                "state": self.provider.state,
+            }
+        return res
+
 
     def __repr__(self):
         return f"<FoodListing id={self.id} food_name={self.food_name!r} status={self.status}>"

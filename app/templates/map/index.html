@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Map View — Help With Food{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<style>
+  .leaflet-popup-content h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    color: var(--color-primary-dark);
+  }
+  .leaflet-popup-content p {
+    margin: 0.2rem 0;
+    font-size: 0.88rem;
+  }
+  .popup-contact {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--color-border);
+    font-size: 0.85rem;
+  }
+  .popup-actions {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="listings-page" data-page="map-view">
+  <div class="listings-page__header">
+    <div>
+      <h1>Food Rescue & Orphanage Map</h1>
+      <p class="text-muted">Explore locations of registered orphanages, community receivers, and active food donations.</p>
+    </div>
+    <div style="display: flex; gap: var(--space-2);">
+      <a href="{{ url_for('frontend.orphanages_page') }}" class="btn btn--secondary" data-role-hide="recipient">List View</a>
+    </div>
+  </div>
+
+  <div class="search-hero" style="padding: var(--space-3) var(--space-4);">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-3);">
+      <div style="display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap;">
+        <label style="display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; font-weight: 500;">
+          <input type="checkbox" id="toggle-orphanages" checked>
+          <span class="map-dot map-dot--orphanage"></span>
+          Show Orphanages & Receivers (<span id="orphanage-count">0</span>)
+        </label>
+        <label style="display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; font-weight: 500;">
+          <input type="checkbox" id="toggle-providers" checked>
+          <span class="map-dot map-dot--provider"></span>
+          Show Food Providers (<span id="provider-count">0</span>)
+        </label>
+        <label style="display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; font-weight: 500;">
+          <input type="checkbox" id="toggle-listings" checked>
+          <span class="map-dot map-dot--donation"></span>
+          Show Food Donations (<span id="listings-count">0</span>)
+        </label>
+      </div>
+
+      <div style="display: flex; gap: var(--space-2); align-items: center;">
+        <input type="search" id="map-search-input" placeholder="Search location, name…" style="padding: 0.4rem 0.75rem; font-size: 0.9rem; border: 1px solid var(--color-border); border-radius: 4px;">
+        <button type="button" id="map-locate-me-btn" class="btn btn--secondary btn--small" title="Center map on my location">📍 Near Me</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="route-info-banner" class="alert alert--info" style="display: flex; justify-content: space-between; align-items: center;" hidden>
+    <div>
+      <strong id="route-title">Route & Distance:</strong>
+      <span id="route-distance-text">Calculated distance</span>
+    </div>
+    <button type="button" id="clear-route-btn" class="btn btn--secondary btn--small">Clear Route</button>
+  </div>
+
+  <div id="map-alert"></div>
+  <p id="map-loading" class="text-muted">Loading map data…</p>
+
+  <div id="map-container"></div>
+
+  <div class="map-legend">
+    <div class="map-legend-item">
+      <span class="map-dot map-dot--orphanage"></span>
+      <strong>Green Pin:</strong> Registered Orphanage / Shelter
+    </div>
+    <div class="map-legend-item">
+      <span class="map-dot map-dot--provider"></span>
+      <strong>Blue Pin:</strong> Registered Food Provider / Donor
+    </div>
+    <div class="map-legend-item">
+      <span class="map-dot map-dot--donation"></span>
+      <strong>Orange Pin:</strong> Available Food Donation
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="{{ url_for('static', filename='js/orphanages-map.js') }}"></script>
+{% endblock %}

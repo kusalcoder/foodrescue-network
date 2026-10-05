@@ -112,25 +112,75 @@ function formatDateTime(iso) {
   function cardHtml(pickup) {
     const statusLabel = PICKUP_STATUS_LABELS[pickup.status] || pickup.status;
     const badgeClass = PICKUP_BADGE_CLASS[pickup.status] || pickup.status;
-    const listing = listingCache[pickup.listing_id];
+    const listing = listingCache[pickup.listing_id] || pickup.listing;
     const req = requestCache[pickup.request_id];
 
-    const title = listing ? escapeHtml(listing.food_name) : `Listing #${pickup.listing_id}`;
+    const title = listing && listing.food_name ? escapeHtml(listing.food_name) : `Listing #${pickup.listing_id}`;
     const quantityLine = (req && listing)
-      ? `<p class="text-muted">${escapeHtml(req.requested_quantity)} ${escapeHtml(listing.quantity_unit)}</p>`
+      ? `<p class="text-muted">Quantity: <strong>${escapeHtml(req.requested_quantity)} ${escapeHtml(listing.quantity_unit || '')}</strong></p>`
       : '';
     const infoLine = pickup.confirmation_info
       ? `<p class="listing-card__desc">${escapeHtml(pickup.confirmation_info)}</p>`
       : '';
 
+    let contactBlock = '';
+    if (myRole === 'recipient' && pickup.provider) {
+      const p = pickup.provider;
+      const phone = p.phone || p.contact_info;
+      const email = p.email;
+      const address = [p.address, p.city].filter(Boolean).join(', ') || listing.pickup_location;
+      const mapLink = (p.latitude && p.longitude)
+        ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${p.latitude},${p.longitude}" target="_blank" class="contact-link" style="color:#2563eb;">🗺️ Get Directions</a>`
+        : '';
+
+      contactBlock = `
+        <div class="contact-box">
+          <h4>Provider & Pickup Contact:</h4>
+          <p style="margin:0 0 0.25rem 0;"><strong>🏢 ${escapeHtml(p.organization_name || 'Food Provider')}</strong></p>
+          <p style="margin:0 0 0.4rem 0;">📍 ${escapeHtml(address || 'Pickup address on file')}</p>
+          <div class="contact-links">
+            ${phone ? `<a href="tel:${escapeHtml(phone)}" class="contact-link">📞 ${escapeHtml(phone)}</a>` : ''}
+            ${email ? `<a href="mailto:${escapeHtml(email)}" class="contact-link">✉️ ${escapeHtml(email)}</a>` : ''}
+            ${mapLink}
+          </div>
+        </div>
+      `;
+    } else if (myRole === 'provider' && pickup.recipient) {
+      const r = pickup.recipient;
+      const phone = r.phone || r.contact_info;
+      const email = r.email;
+      const address = [r.address, r.city].filter(Boolean).join(', ');
+      const mapLink = (r.latitude && r.longitude)
+        ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${r.latitude},${r.longitude}" target="_blank" class="contact-link" style="color:#2563eb;">🗺️ Recipient Location / Directions</a>`
+        : '';
+
+      contactBlock = `
+        <div class="contact-box">
+          <h4>Orphanage / Receiver Contact:</h4>
+          <p style="margin:0 0 0.25rem 0;"><strong>🏢 ${escapeHtml(r.organization_name || 'Recipient')}</strong></p>
+          <p style="margin:0 0 0.4rem 0;">📍 ${escapeHtml(address || 'Location on file')}</p>
+          <div class="contact-links">
+            ${phone ? `<a href="tel:${escapeHtml(phone)}" class="contact-link">📞 ${escapeHtml(phone)}</a>` : ''}
+            ${email ? `<a href="mailto:${escapeHtml(email)}" class="contact-link">✉️ ${escapeHtml(email)}</a>` : ''}
+            ${mapLink}
+          </div>
+        </div>
+      `;
+    }
+
     let actions = '';
+    const routeBtn = ACTIVE_PICKUP_STATUSES.includes(pickup.status)
+      ? `<a class="btn btn--secondary" href="/map?pickup_id=${pickup.id}">🗺️ View Route / View Map</a>`
+      : '';
+
     if (myRole === 'recipient') {
       if (pickup.status === 'scheduled') {
-        actions = `<button type="button" class="btn btn--primary" data-confirm-id="${pickup.id}">Confirm</button>`;
+        actions = `<button type="button" class="btn btn--primary" data-confirm-id="${pickup.id}">Confirm Pickup</button>`;
       }
       if (ACTIVE_PICKUP_STATUSES.includes(pickup.status)) {
         actions += `<button type="button" class="btn btn--danger" data-cancel-id="${pickup.id}">Cancel</button>`;
       }
+      actions = [actions, routeBtn].filter(Boolean).join(' ');
     } else if (myRole === 'provider') {
       if (pickup.status === 'scheduled' || pickup.status === 'confirmed') {
         actions = `
@@ -138,11 +188,9 @@ function formatDateTime(iso) {
           <button type="button" class="btn btn--danger" data-fail-id="${pickup.id}">Mark Failed</button>
         `;
       }
+      actions = [actions, routeBtn].filter(Boolean).join(' ');
     }
 
-    // Phase 8: a completed pickup has a permanent DistributionRecord
-    // sitting on /distributions — point at it rather than leaving a
-    // dead end once there's nothing left to action here.
     if (pickup.status === 'completed') {
       actions = `<a class="btn btn--secondary" href="/distributions">View in History</a>`;
     }
@@ -155,9 +203,10 @@ function formatDateTime(iso) {
         </div>
         <h3><a href="/listings/${pickup.listing_id}">${title}</a></h3>
         ${quantityLine}
-        <p class="text-muted">Pickup time: ${escapeHtml(formatDateTime(pickup.pickup_time))}</p>
+        <p class="text-muted">Scheduled time: <strong>${escapeHtml(formatDateTime(pickup.pickup_time))}</strong></p>
         ${infoLine}
-        <div class="listing-card__actions">${actions}</div>
+        ${contactBlock}
+        <div class="listing-card__actions" style="margin-top: var(--space-3);">${actions}</div>
       </article>
     `;
   }

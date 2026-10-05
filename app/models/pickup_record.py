@@ -75,7 +75,7 @@ class PickupRecord(db.Model, TimestampMixin):
     )
 
     def to_dict(self):
-        return {
+        res = {
             "id": self.id,
             "request_id": self.request_id,
             "listing_id": self.listing_id,
@@ -87,6 +87,43 @@ class PickupRecord(db.Model, TimestampMixin):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+        if self.provider:
+            res["provider"] = {
+                "id": self.provider.id,
+                "organization_name": self.provider.organization_name,
+                "contact_info": self.provider.contact_info,
+                "phone": getattr(self.provider, "phone", None) or self.provider.contact_info,
+                "email": self.provider.user.email if self.provider.user else None,
+                "address": self.provider.address,
+                "city": self.provider.city,
+                "state": self.provider.state,
+                "latitude": float(self.provider.latitude) if self.provider.latitude is not None else None,
+                "longitude": float(self.provider.longitude) if self.provider.longitude is not None else None,
+            }
+        if self.recipient:
+            res["recipient"] = {
+                "id": self.recipient.id,
+                "organization_name": self.recipient.organization_name,
+                "contact_info": self.recipient.contact_info,
+                "phone": getattr(self.recipient, "phone", None) or self.recipient.contact_info,
+                "email": self.recipient.user.email if self.recipient.user else None,
+                "address": self.recipient.address,
+                "city": self.recipient.city,
+                "state": self.recipient.state,
+                "latitude": float(self.recipient.latitude) if self.recipient.latitude is not None else None,
+                "longitude": float(self.recipient.longitude) if self.recipient.longitude is not None else None,
+            }
+        if self.listing:
+            res["listing"] = {
+                "id": self.listing.id,
+                "food_name": self.listing.food_name,
+                "quantity": float(self.listing.quantity),
+                "quantity_unit": self.listing.quantity_unit,
+                "pickup_location": self.listing.pickup_location,
+                "latitude": float(self.listing.latitude) if self.listing.latitude is not None else None,
+                "longitude": float(self.listing.longitude) if self.listing.longitude is not None else None,
+            }
+        return res
 
     def __repr__(self):
         return f"<PickupRecord id={self.id} request_id={self.request_id} status={self.status}>"

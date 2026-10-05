@@ -64,6 +64,32 @@ def create_notification(
     return notification
 
 
+def notify_admins(
+    *,
+    notification_type: str,
+    title: str,
+    message: str,
+    related_resource_type: str = None,
+    related_resource_id: int = None,
+):
+    """Stage notifications for all active administrators."""
+    from app.models import User, UserRole, AccountStatus
+    admins = (
+        db.session.query(User)
+        .filter(User.role == UserRole.ADMIN, User.status == AccountStatus.ACTIVE)
+        .all()
+    )
+    for admin in admins:
+        create_notification(
+            user_id=admin.id,
+            notification_type=notification_type,
+            title=title,
+            message=message,
+            related_resource_type=related_resource_type,
+            related_resource_id=related_resource_id,
+        )
+
+
 def list_notifications_query(*, user, unread_only: bool = False):
     """
     Base (unpaginated) query of a user's own notifications, newest
@@ -71,6 +97,8 @@ def list_notifications_query(*, user, unread_only: bool = False):
     unlike the pickup/distribution queries this needs no profile
     lookup — it's scoped directly by `user.id`.
     """
+    if user is None or getattr(user, "id", None) is None:
+        raise NotificationError("Authentication required.", "UNAUTHORIZED", 401)
     query = db.session.query(Notification).filter(Notification.user_id == user.id)
     if unread_only:
         query = query.filter(Notification.is_read.is_(False))
@@ -78,6 +106,8 @@ def list_notifications_query(*, user, unread_only: bool = False):
 
 
 def count_unread(*, user) -> int:
+    if user is None or getattr(user, "id", None) is None:
+        return 0
     return (
         db.session.query(db.func.count(Notification.id))
         .filter(Notification.user_id == user.id, Notification.is_read.is_(False))
@@ -94,6 +124,9 @@ def mark_notification_read(*, notification_id: int, user) -> Notification:
     state with rules attached (unlike, say, a request or pickup
     status) and there's no meaningful failure mode to report here.
     """
+    if user is None or getattr(user, "id", None) is None:
+        raise NotificationError("Authentication required.", "UNAUTHORIZED", 401)
+
     notification = db.session.get(Notification, notification_id)
     if notification is None:
         raise NotificationError(

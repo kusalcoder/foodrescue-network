@@ -43,6 +43,9 @@ class RecipientProfile(db.Model, TimestampMixin):
 
     address = db.Column(db.String(255), nullable=True)
     city = db.Column(db.String(100), nullable=True, index=True)
+    state = db.Column(db.String(100), nullable=True, index=True)
+    pincode = db.Column(db.String(20), nullable=True)
+    phone = db.Column(db.String(50), nullable=True)
 
     latitude = db.Column(db.Numeric(9, 6), nullable=True)
     longitude = db.Column(db.Numeric(9, 6), nullable=True)
@@ -72,20 +75,37 @@ class RecipientProfile(db.Model, TimestampMixin):
     )
 
     def to_dict(self):
+        from app.utils.geo import is_in_india
+
+        lat = float(self.latitude) if self.latitude is not None else None
+        lng = float(self.longitude) if self.longitude is not None else None
+
+        if lat is not None and lng is not None:
+            if not is_in_india(lat, lng):
+                lat = None
+                lng = None
+
         return {
             "id": self.id,
             "user_id": self.user_id,
             "organization_name": self.organization_name,
             "contact_info": self.contact_info,
+            "phone": self.phone or self.contact_info,
+            "email": self.user.email if self.user else None,
             "address": self.address,
             "city": self.city,
-            "latitude": float(self.latitude) if self.latitude is not None else None,
-            "longitude": float(self.longitude) if self.longitude is not None else None,
+            "state": self.state,
+            "pincode": self.pincode,
+            "latitude": lat,
+            "longitude": lng,
+            "is_default_location": False,
+            "location_note": None,
             "description": self.description,
             "verification_status": self.verification_status.value,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+
 
     def __repr__(self):
         return f"<RecipientProfile id={self.id} organization_name={self.organization_name!r}>"

@@ -26,7 +26,7 @@ Quantity safety (spec sections 15 & 35) works like this:
 from app.extensions import db
 from app.models import FoodListing, FoodRequest, ListingStatus, RequestStatus
 from app.models.base import utcnow
-from app.services.notification_service import create_notification
+from app.services.notification_service import create_notification, notify_admins
 from app.utils.audit import record_audit_log
 from app.utils.validation import validate_positive_number
 
@@ -52,9 +52,18 @@ def _accepted_quantity_for_listing(listing_id: int, exclude_request_id: int = No
     return query.scalar() or 0
 
 
-def create_request(*, recipient_profile, data: dict) -> FoodRequest:
+def create_request(*, recipient_profile, data: dict = None) -> FoodRequest:
     """Recipient submits a request to collect from a listing."""
-    if recipient_profile.verification_status.value != "verified":
+    data = data or {}
+    if recipient_profile is None:
+        raise RequestError(
+            "Your recipient organization must be verified before requesting food.",
+            "RECIPIENT_NOT_VERIFIED",
+            403,
+        )
+
+    verification_val = getattr(recipient_profile.verification_status, "value", recipient_profile.verification_status)
+    if verification_val != "verified":
         raise RequestError(
             "Your recipient organization must be verified before requesting food.",
             "RECIPIENT_NOT_VERIFIED",
@@ -66,18 +75,14 @@ def create_request(*, recipient_profile, data: dict) -> FoodRequest:
     if listing is None:
         raise RequestError("Listing not found.", "LISTING_NOT_FOUND", 404)
 
-    if listing.status != ListingStatus.AVAILABLE:
+    listing.check_and_update_expiry()
+    if listing.status != ListingStatus.AVAILABLE or (listing.pickup_end_time and utcnow() >= listing.pickup_end_time):
+        listing.status = ListingStatus.EXPIRED
+        db.session.commit()
         raise RequestError(
-            f"This listing is not available for requests (status: {listing.status.value}).",
-            "LISTING_NOT_AVAILABLE",
-            409,
-        )
-
-    if listing.pickup_end_time <= utcnow():
-        raise RequestError(
-            "This listing's pickup window has already ended.",
+            "This food listing is unavailable because the pickup end time has expired.",
             "LISTING_EXPIRED",
-            409,
+            400,
         )
 
     requested_quantity = data.get("requested_quantity")
@@ -85,8 +90,8 @@ def create_request(*, recipient_profile, data: dict) -> FoodRequest:
     if qty_error:
         raise RequestError(qty_error, "VALIDATION_ERROR", 422)
 
-    remaining = float(listing.quantity) - float(
-        _accepted_quantity_for_listing(listing.id)
+    remaining = round(
+        float(listing.quantity) - float(_accepted_quantity_for_listing(listing.id)), 4
     )
     if float(requested_quantity) > remaining:
         raise RequestError(
@@ -137,6 +142,13 @@ def create_request(*, recipient_profile, data: dict) -> FoodRequest:
         related_resource_type="food_request",
         related_resource_id=request.id,
     )
+    notify_admins(
+        notification_type="request_received",
+        title="New request submitted",
+        message=f"{recipient_profile.organization_name} requested {requested_quantity} {listing.quantity_unit} of {listing.food_name!r}.",
+        related_resource_type="food_request",
+        related_resource_id=request.id,
+    )
     db.session.commit()
     return request
 
@@ -170,10 +182,13 @@ def accept_request(*, request_id: int, provider_profile) -> FoodRequest:
         db.session.query(FoodListing)
         .filter_by(id=request.listing_id)
         .with_for_update()
-        .one()
+        .first()
     )
+    if listing is None:
+        db.session.rollback()
+        raise RequestError("Listing not found.", "LISTING_NOT_FOUND", 404)
 
-    if listing.provider_id != provider_profile.id:
+    if provider_profile is None or listing.provider_id != provider_profile.id:
         db.session.rollback()
         raise RequestError(
             "You do not have permission to manage this request.", "FORBIDDEN", 403
@@ -187,8 +202,8 @@ def accept_request(*, request_id: int, provider_profile) -> FoodRequest:
             409,
         )
 
-    remaining = float(listing.quantity) - float(
-        _accepted_quantity_for_listing(listing.id)
+    remaining = round(
+        float(listing.quantity) - float(_accepted_quantity_for_listing(listing.id)), 4
     )
     if float(request.requested_quantity) > remaining:
         db.session.rollback()
@@ -201,7 +216,7 @@ def accept_request(*, request_id: int, provider_profile) -> FoodRequest:
 
     request.status = RequestStatus.ACCEPTED
 
-    new_remaining = remaining - float(request.requested_quantity)
+    new_remaining = round(remaining - float(request.requested_quantity), 4)
     if new_remaining <= 0:
         listing.status = ListingStatus.RESERVED
 
@@ -220,6 +235,13 @@ def accept_request(*, request_id: int, provider_profile) -> FoodRequest:
         related_resource_type="food_request",
         related_resource_id=request.id,
     )
+    notify_admins(
+        notification_type="request_accepted",
+        title="Food request accepted",
+        message=f"{provider_profile.organization_name} accepted request #{request.id} for {listing.food_name!r}.",
+        related_resource_type="food_request",
+        related_resource_id=request.id,
+    )
     db.session.commit()
     return request
 
@@ -227,7 +249,7 @@ def accept_request(*, request_id: int, provider_profile) -> FoodRequest:
 def reject_request(*, request_id: int, provider_profile) -> FoodRequest:
     request = _require_request(request_id)
 
-    if request.listing.provider_id != provider_profile.id:
+    if provider_profile is None or request.listing.provider_id != provider_profile.id:
         raise RequestError(
             "You do not have permission to manage this request.", "FORBIDDEN", 403
         )
@@ -256,6 +278,13 @@ def reject_request(*, request_id: int, provider_profile) -> FoodRequest:
         related_resource_type="food_request",
         related_resource_id=request.id,
     )
+    notify_admins(
+        notification_type="request_rejected",
+        title="Food request rejected",
+        message=f"{provider_profile.organization_name} rejected request #{request.id}.",
+        related_resource_type="food_request",
+        related_resource_id=request.id,
+    )
     db.session.commit()
     return request
 
@@ -270,7 +299,7 @@ def cancel_request(*, request_id: int, recipient_profile) -> FoodRequest:
     """
     request = _require_request(request_id)
 
-    if request.recipient_id != recipient_profile.id:
+    if recipient_profile is None or request.recipient_id != recipient_profile.id:
         raise RequestError(
             "You do not have permission to manage this request.", "FORBIDDEN", 403
         )
@@ -283,17 +312,18 @@ def cancel_request(*, request_id: int, recipient_profile) -> FoodRequest:
         )
 
     was_accepted = request.status == RequestStatus.ACCEPTED
+    listing = None
 
     if was_accepted:
         listing = (
             db.session.query(FoodListing)
             .filter_by(id=request.listing_id)
             .with_for_update()
-            .one()
+            .first()
         )
     request.status = RequestStatus.CANCELLED
 
-    if was_accepted and listing.status == ListingStatus.RESERVED:
+    if was_accepted and listing and listing.status == ListingStatus.RESERVED:
         # Cancelling an accepted request frees up quantity, so a fully
         # reserved listing becomes available again.
         listing.status = ListingStatus.AVAILABLE
@@ -324,13 +354,21 @@ def get_request_for_viewer(*, request_id: int, current_user) -> FoodRequest:
     """
     request = _require_request(request_id)
 
+    if current_user is None:
+        raise RequestError(
+            "You do not have permission to view this request.", "FORBIDDEN", 403
+        )
+
+    recipient_prof = getattr(current_user, "recipient_profile", None)
+    provider_prof = getattr(current_user, "provider_profile", None)
+
     is_owning_recipient = (
-        current_user.recipient_profile is not None
-        and request.recipient_id == current_user.recipient_profile.id
+        recipient_prof is not None
+        and request.recipient_id == recipient_prof.id
     )
     is_owning_provider = (
-        current_user.provider_profile is not None
-        and request.listing.provider_id == current_user.provider_profile.id
+        provider_prof is not None
+        and request.listing.provider_id == provider_prof.id
     )
 
     if not (is_owning_recipient or is_owning_provider):
@@ -341,6 +379,8 @@ def get_request_for_viewer(*, request_id: int, current_user) -> FoodRequest:
 
 
 def list_requests_for_recipient(*, recipient_profile):
+    if recipient_profile is None:
+        return []
     return (
         db.session.query(FoodRequest)
         .filter_by(recipient_id=recipient_profile.id)
@@ -353,7 +393,7 @@ def list_requests_for_listing(*, listing_id: int, provider_profile):
     listing = db.session.get(FoodListing, listing_id)
     if listing is None:
         raise RequestError("Listing not found.", "LISTING_NOT_FOUND", 404)
-    if listing.provider_id != provider_profile.id:
+    if provider_profile is None or listing.provider_id != provider_profile.id:
         raise RequestError(
             "You do not have permission to view requests for this listing.",
             "FORBIDDEN",

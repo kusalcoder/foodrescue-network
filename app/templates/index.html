@@ -1,23 +1,24 @@
 {% extends "base.html" %}
 
-{% block title %}FoodRescue Network — Rescue Surplus Food{% endblock %}
+{% block title %}Help With Food — Food Donations & Rescues{% endblock %}
 
 {% block content %}
 <section class="hero">
-  <h1>Turn surplus food into someone's next meal.</h1>
+  <h1>Turn surplus food into food donations and rescues.</h1>
   <p class="hero__subtitle">
-    FoodRescue Network connects restaurants, grocers, and event
-    organizers with shelters and community groups who can put
-    surplus food to good use — before it goes to waste.
+    Help With Food connects restaurants, grocers, caterers, and food donors with
+    orphanages, shelters, and community groups to coordinate food donations and rescue surplus food — before it goes to waste.
   </p>
 
   <div class="hero__actions" data-guest-only>
     <a class="btn btn--primary" href="/register" data-nav="register">Get Started</a>
     <a class="btn btn--secondary" href="/login" data-nav="login">Log In</a>
+    <a class="btn btn--outline" href="{{ url_for('frontend.listings_page') }}">View Food Donations</a>
   </div>
 
   <div class="hero__actions" data-auth-only hidden>
-    <a class="btn btn--primary" href="{{ url_for('frontend.listings_page') }}">Browse Listings</a>
+    <a class="btn btn--primary" href="{{ url_for('frontend.listings_page') }}">Browse Food Donations</a>
+    <a class="btn btn--secondary" href="{{ url_for('frontend.map_page') }}">Explore Map</a>
   </div>
 </section>
 
@@ -25,16 +26,16 @@
   <h2>How it works</h2>
   <div class="cards">
     <article class="card">
-      <h3>1. Providers list surplus food</h3>
-      <p>Restaurants, grocers, and caterers post what's available, how much, and when it can be picked up.</p>
+      <h3>1. Providers list food donations</h3>
+      <p>Restaurants, bakeries, grocers, and caterers post available food donations with quantity, pickup window, and location.</p>
     </article>
     <article class="card">
-      <h3>2. Recipients request it</h3>
-      <p>Verified shelters and community organizations browse nearby listings and request what they need.</p>
+      <h3>2. Orphanages & Receivers request food</h3>
+      <p>Verified orphanages, shelters, and relief organizations search nearby donations and providers to request what they need.</p>
     </article>
     <article class="card">
-      <h3>3. Food gets picked up</h3>
-      <p>Providers accept requests, schedule a pickup window, and confirm once the handoff is complete.</p>
+      <h3>3. Confirmation & Direct Contact</h3>
+      <p>Providers accept requests, schedule pickup times, and both sides get mutual contact details (phone, email) and location directions.</p>
     </article>
   </div>
 </section>

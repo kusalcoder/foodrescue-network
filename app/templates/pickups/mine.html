@@ -9,7 +9,11 @@
   </div>
 
   <div id="no-profile-notice" class="alert alert--info" hidden>
-    <p>You need a provider or recipient profile before you'll have any pickups.</p>
+    <p style="font-weight: 600; margin-bottom: var(--space-1);">You need an organization profile before you can manage pickups.</p>
+    <p class="text-muted" style="margin-bottom: var(--space-3);">
+      Complete your profile to track and manage your scheduled pickups.
+    </p>
+    <a href="{{ url_for('frontend.my_profile_page') }}" class="btn btn--primary">Set Up Profile</a>
   </div>
 
   <div id="dashboard" hidden>

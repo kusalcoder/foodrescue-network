@@ -151,3 +151,61 @@ def nearby_recipients():
         "Nearby verified recipients retrieved successfully.",
         data={"recipients": recipients_data, "pagination": pagination},
     )
+
+
+@providers_bp.route("", methods=["GET"])
+def list_providers():
+    """
+    GET /api/providers — search and list available food providers.
+    Query parameters:
+        search: case-insensitive search in org name, city, address, description
+        city: filter by city
+        page, limit: standard pagination
+    """
+    from app.extensions import db
+    from app.models import FoodListing, ListingStatus, ProfileStatus, ProviderProfile
+    from app.utils.pagination import paginate_query
+
+    query = db.session.query(ProviderProfile).filter_by(status=ProfileStatus.ACTIVE)
+
+    search = request.args.get("search", "").strip()
+    if search:
+        pattern = f"%{search.lower()}%"
+        query = query.filter(
+            db.or_(
+                db.func.lower(ProviderProfile.organization_name).like(pattern),
+                db.func.lower(ProviderProfile.city).like(pattern),
+                db.func.lower(ProviderProfile.state).like(pattern),
+                db.func.lower(ProviderProfile.address).like(pattern),
+                db.func.lower(ProviderProfile.description).like(pattern),
+            )
+        )
+
+    city = request.args.get("city", "").strip()
+    if city:
+        query = query.filter(db.func.lower(ProviderProfile.city) == city.lower())
+
+    state = request.args.get("state", "").strip()
+    if state:
+        query = query.filter(db.func.lower(ProviderProfile.state) == state.lower())
+
+    query = query.order_by(ProviderProfile.organization_name.asc())
+    page, limit = get_pagination_params(request.args)
+    items, pagination = paginate_query(query, page, limit)
+
+    results = []
+    for p in items:
+        p_dict = p.to_dict()
+        active_count = (
+            db.session.query(FoodListing)
+            .filter(FoodListing.provider_id == p.id, FoodListing.status == ListingStatus.AVAILABLE)
+            .count()
+        )
+        p_dict["active_donations_count"] = active_count
+        results.append(p_dict)
+
+    return success_response(
+        "Providers retrieved successfully.",
+        data={"providers": results, "pagination": pagination},
+    )
+

@@ -180,7 +180,34 @@ async function fetchAllPages(path, key) {
         </form>
       `;
     } else if (r.status === 'pickup_pending') {
-      actions = `<a class="btn btn--secondary" href="/pickups">View Pickup</a>`;
+      actions = `<a class="btn btn--secondary" href="/pickups">View Pickup</a> <a class="btn btn--secondary" href="/map">🗺️ View Map</a>`;
+    }
+
+    const recipientName = (r.recipient && r.recipient.organization_name)
+      ? r.recipient.organization_name
+      : `Recipient #${r.recipient_id}`;
+
+    let contactBlock = '';
+    if (r.recipient) {
+      const recPhone = r.recipient.phone;
+      const recEmail = r.recipient.email;
+      const recAddress = [r.recipient.address, r.recipient.city].filter(Boolean).join(', ');
+      const isConfirmed = r.status === 'accepted' || r.status === 'pickup_pending' || r.status === 'completed';
+
+      const mapLink = (r.recipient.latitude && r.recipient.longitude && isConfirmed)
+        ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${r.recipient.latitude},${r.recipient.longitude}" target="_blank" class="contact-link" style="color:#2563eb;">🗺️ Receiver Location / Directions</a>`
+        : '';
+
+      contactBlock = `
+        <div class="contact-box" style="margin-top: var(--space-2); padding: var(--space-2) var(--space-3);">
+          <p style="margin: 0 0 0.25rem 0; font-weight: 600; color: var(--color-primary-dark);">📍 ${escapeHtml(recAddress || 'Location on file')}</p>
+          <div class="contact-links">
+            ${recPhone ? `<a href="tel:${escapeHtml(recPhone)}" class="contact-link">📞 ${escapeHtml(recPhone)}</a>` : ''}
+            ${recEmail ? `<a href="mailto:${escapeHtml(recEmail)}" class="contact-link">✉️ ${escapeHtml(recEmail)}</a>` : ''}
+            ${mapLink}
+          </div>
+        </div>
+      `;
     }
 
     return `
@@ -189,11 +216,12 @@ async function fetchAllPages(path, key) {
           <span class="badge badge--${badgeClass}">${escapeHtml(statusLabel)}</span>
           <span class="text-muted listing-card__category">Request #${r.id}</span>
         </div>
-        <h3>Recipient #${escapeHtml(r.recipient_id)}</h3>
-        <p class="text-muted">Requested: ${escapeHtml(r.requested_quantity)} ${escapeHtml(unit)}</p>
+        <h3 style="margin-bottom: 0.25rem;">${escapeHtml(recipientName)}</h3>
+        <p class="text-muted" style="margin-bottom: var(--space-2);">Requested: <strong>${escapeHtml(r.requested_quantity)} ${escapeHtml(unit)}</strong></p>
         ${created}
         ${noteLine}
-        <div class="listing-card__actions">${actions}</div>
+        ${contactBlock}
+        <div class="listing-card__actions" style="margin-top: var(--space-3);">${actions}</div>
         ${scheduleForm}
       </article>
     `;

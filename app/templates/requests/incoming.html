@@ -14,12 +14,11 @@
   </div>
 
   <div id="no-profile-notice" class="alert alert--info" hidden>
-    <p>You need a provider profile before you can manage requests.</p>
-    <p class="text-muted">
-      Provider profile setup doesn't have a page yet (that's Phase 10) — for
-      now, create one by sending a <code>POST /api/providers/profile</code>
-      request with your organization details.
+    <p style="font-weight: 600; margin-bottom: var(--space-1);">You need a provider profile before you can manage requests.</p>
+    <p class="text-muted" style="margin-bottom: var(--space-3);">
+      Complete your organization details (name, contact info, and address) to manage incoming requests for your listings.
     </p>
+    <a href="{{ url_for('frontend.my_profile_page') }}" class="btn btn--primary">Set Up Provider Profile</a>
   </div>
 
   <div id="dashboard" hidden>

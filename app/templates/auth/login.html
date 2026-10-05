@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Log In — FoodRescue Network{% endblock %}
+{% block title %}Log In — Help With Food{% endblock %}
 
 {% block content %}
 <section class="auth-page">
@@ -17,7 +17,15 @@
 
     <div class="form-field">
       <label for="password">Password</label>
-      <input type="password" id="password" name="password" required autocomplete="current-password">
+      <div class="password-input-wrap">
+        <input type="password" id="password" name="password" required autocomplete="current-password">
+        <button type="button" class="password-toggle-btn" data-toggle-target="password" aria-label="Show password" title="Show password">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="eye-icon">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+      </div>
       <div class="field-error" data-error-for="password"></div>
     </div>
 

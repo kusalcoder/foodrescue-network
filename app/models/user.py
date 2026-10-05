@@ -100,7 +100,7 @@ class User(db.Model, TimestampMixin):
         Deliberately EXCLUDES password_hash — per spec section 4:
         "Never return password hashes in API responses."
         """
-        return {
+        d = {
             "id": self.id,
             "name": self.name,
             "email": self.email,
@@ -109,6 +109,11 @@ class User(db.Model, TimestampMixin):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+        if self.provider_profile:
+            d["provider_profile"] = self.provider_profile.to_dict()
+        if self.recipient_profile:
+            d["recipient_profile"] = self.recipient_profile.to_dict()
+        return d
 
     def __repr__(self):
         return f"<User id={self.id} email={self.email!r} role={self.role}>"

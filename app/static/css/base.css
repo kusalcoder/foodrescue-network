@@ -58,6 +58,16 @@ html, body {
   line-height: 1.5;
 }
 
+body[data-user-role="provider"],
+body[data-user-role="recipient"] {
+  background-image: url("../images/help_with_food_bg.png");
+  background-attachment: fixed;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-color: #eef5f8;
+}
+
 .container {
   max-width: 1080px;
   margin: 0 auto;
@@ -725,3 +735,156 @@ code {
   .main-nav.is-open { display: flex; }
   .main-nav__auth { width: 100%; }
 }
+
+/* ---------- Password Toggle (Show/Hide Eye) ---------- */
+
+.password-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.password-input-wrap input {
+  width: 100%;
+  padding-right: 2.75rem;
+}
+.password-toggle-btn {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.4rem;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+.password-toggle-btn:hover {
+  color: var(--color-text);
+}
+.password-toggle-btn svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+/* ---------- Contact & Location Badges ---------- */
+
+.contact-box {
+  background: #f0f7f3;
+  border: 1px solid #d2e7db;
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  margin-top: var(--space-3);
+}
+.contact-box h4 {
+  margin: 0 0 var(--space-2) 0;
+  font-size: 0.95rem;
+  color: var(--color-primary-dark);
+}
+.contact-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  font-size: 0.9rem;
+}
+.contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 500;
+  color: var(--color-primary-dark);
+}
+.location-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #eef2ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  margin-top: var(--space-2);
+}
+
+/* ---------- Directory Search & Tabs ---------- */
+
+.search-hero {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+.search-hero-form {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.search-hero-form .form-field {
+  flex: 1;
+  min-width: 200px;
+  margin-bottom: 0;
+}
+.search-btn-wrap {
+  display: flex;
+  align-items: flex-end;
+}
+.tabs-nav {
+  display: flex;
+  gap: var(--space-2);
+  border-bottom: 2px solid var(--color-border);
+  margin-bottom: var(--space-4);
+}
+.tab-btn {
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  background: none;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+.tab-btn.is-active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+/* ---------- Map View ---------- */
+
+#map-container {
+  height: 520px;
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  z-index: 1;
+}
+.map-legend {
+  display: flex;
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+.map-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.map-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.map-dot--orphanage { background: #2f7a4f; }
+.map-dot--provider { background: #2563eb; }
+.map-dot--donation { background: #e8834a; }
