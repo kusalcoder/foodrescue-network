@@ -433,6 +433,17 @@ function isInIndia(lat, lng) {
   }
 
   async function loadMapData() {
+    if (typeof Auth !== 'undefined' && !Auth.isLoggedIn()) {
+      loadingEl.hidden = true;
+      alertEl.innerHTML = `
+        <div class="alert alert--info" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+          <span>🔒 Please <strong>log in</strong> or <strong>register</strong> to view food rescue locations and interactive donation map markers.</span>
+          <a href="/login" class="btn btn--primary btn--small">Log In to View Map</a>
+        </div>
+      `;
+      return;
+    }
+
     loadingEl.hidden = false;
     alertEl.innerHTML = '';
 
@@ -480,7 +491,11 @@ function isInIndia(lat, lng) {
       }
     } catch (err) {
       loadingEl.hidden = true;
-      showAlert(err.message || 'Could not load map data.');
+      let msg = err.message || 'Could not load map data.';
+      if (err.status === 401 || (msg && msg.includes('Authentication required'))) {
+        msg = '🔒 Please log in to view food rescue locations and interactive donation map markers.';
+      }
+      showAlert(msg, 'info');
     }
   }
 
