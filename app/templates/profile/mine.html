@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile — FoodRescue Network{% endblock %}
+
+{% block content %}
+<div id="guest-notice" class="alert alert--info" hidden>
+  <a href="{{ url_for('frontend.login_page') }}">Log in</a> to manage your profile.
+</div>
+
+<div id="wrong-role-notice" class="alert alert--info" hidden>
+  <p>Organization profiles are for provider and recipient accounts. Admin
+  accounts don't have one.</p>
+</div>
+
+<section class="auth-page profile-page" id="profile-page" hidden style="max-width: 520px;">
+  <h1 id="page-title">My Profile</h1>
+
+  <div id="verification-banner" hidden></div>
+
+  <div id="form-alert"></div>
+  <p id="form-loading" class="text-muted">Loading your profile…</p>
+
+  <form id="profile-form" novalidate hidden>
+    <div class="form-field">
+      <label for="organization_name">Organization Name</label>
+      <input type="text" id="organization_name" required maxlength="200">
+      <div class="field-error" data-error-for="organization_name"></div>
+    </div>
+
+    <div class="form-field">
+      <label for="phone">Phone Number <span class="text-muted">(for direct contact)</span></label>
+      <input type="tel" id="phone" maxlength="50" placeholder="e.g. +1 555-0199">
+    </div>
+
+    <div class="form-field">
+      <label for="contact_info">Additional Contact Info <span class="text-muted">(optional)</span></label>
+      <input type="text" id="contact_info" maxlength="150" placeholder="Alternate phone or notes">
+    </div>
+
+    <div class="form-field">
+      <label for="address">Address <span style="color: var(--color-danger, #dc2626);">*</span></label>
+      <input type="text" id="address" required maxlength="255" placeholder="e.g. 12-45, MG Road">
+      <div class="field-error" data-error-for="address"></div>
+    </div>
+
+    <div class="form-field">
+      <label for="city">City <span style="color: var(--color-danger, #dc2626);">*</span></label>
+      <input type="text" id="city" required maxlength="100" placeholder="e.g. Vijayawada, Hyderabad">
+      <div class="field-error" data-error-for="city"></div>
+    </div>
+
+    <div class="form-field">
+      <label for="state">State <span style="color: var(--color-danger, #dc2626);">*</span></label>
+      <input type="text" id="state" required maxlength="100" placeholder="e.g. Andhra Pradesh, Telangana, Maharashtra">
+      <div class="field-error" data-error-for="state"></div>
+    </div>
+
+    <div class="form-field">
+      <label for="pincode">Pincode / ZIP Code <span style="color: var(--color-danger, #dc2626);">*</span></label>
+      <input type="text" id="pincode" required maxlength="20" placeholder="e.g. 520010, 500001">
+      <div class="field-error" data-error-for="pincode"></div>
+    </div>
+
+    <div class="form-field">
+      <label for="country">Country</label>
+      <input type="text" id="country" value="India" readonly style="background-color: var(--color-bg-secondary, #f3f4f6); cursor: not-allowed;">
+      <small class="text-muted">Food rescue network operates strictly within India.</small>
+    </div>
+
+    <div class="form-row" style="align-items: flex-end;">
+      <div class="form-field">
+        <label for="latitude">Latitude <span class="text-muted">(optional)</span></label>
+        <input type="number" id="latitude" step="0.000001" min="-90" max="90">
+      </div>
+      <div class="form-field">
+        <label for="longitude">Longitude <span class="text-muted">(optional)</span></label>
+        <input type="number" id="longitude" step="0.000001" min="-180" max="180">
+      </div>
+    </div>
+    <div style="margin-bottom: var(--space-3);">
+      <button type="button" class="btn btn--secondary btn--sm" id="detect-location-btn">
+        📍 Detect My Current Location
+      </button>
+    </div>
+    <p class="text-muted" style="margin-top: -0.5rem;">
+      Setting these enables map placement and distance calculation — leave empty to skip.
+    </p>
+    <div class="field-error" data-error-for="coordinates"></div>
+
+    <div class="form-field">
+      <label for="description">Description <span class="text-muted">(optional)</span></label>
+      <textarea id="description" rows="3"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn--primary" id="submit-btn">Save Profile</button>
+  </form>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}

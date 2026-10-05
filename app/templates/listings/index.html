@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Listings — FoodRescue Network{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/listings.css') }}">
+{% endblock %}
+
+{% block content %}
+<div id="login-required" hidden>
+  <div class="alert alert--info">
+    You need to <a href="/login">log in</a> to browse listings.
+  </div>
+</div>
+
+<div id="listings-page">
+  <div class="listings-header">
+    <h1>Browse Listings</h1>
+  </div>
+
+  <form id="filter-form" class="filter-bar">
+    <div class="form-field filter-bar__field">
+      <label for="filter-category">Category</label>
+      <select id="filter-category">
+        <option value="">All categories</option>
+        <option value="prepared_food">Prepared Food</option>
+        <option value="packaged_food">Packaged Food</option>
+        <option value="bakery">Bakery</option>
+        <option value="fruits">Fruits</option>
+        <option value="vegetables">Vegetables</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+
+    <div class="form-field filter-bar__field">
+      <label for="filter-city">City</label>
+      <input type="text" id="filter-city" placeholder="e.g. Springfield">
+    </div>
+
+    <div class="form-field filter-bar__field filter-bar__field--checkbox">
+      <label>
+        <input type="checkbox" id="filter-near-me">
+        Near my profile location
+      </label>
+    </div>
+
+    <div class="filter-bar__actions">
+      <button type="submit" class="btn btn--primary">Apply Filters</button>
+      <button type="button" class="btn btn--secondary" id="clear-filters">Clear</button>
+    </div>
+  </form>
+
+  <div id="listings-alert"></div>
+  <div id="listings-loading" class="text-muted">Loading listings…</div>
+  <div id="listings-empty" class="text-muted" hidden>No listings match your filters right now.</div>
+
+  <div id="listings-grid" class="cards listings-grid"></div>
+
+  <div id="pagination" class="pagination" hidden>
+    <button type="button" class="btn btn--secondary" id="prev-page">&laquo; Previous</button>
+    <span id="page-info" class="text-muted"></span>
+    <button type="button" class="btn btn--secondary" id="next-page">Next &raquo;</button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/listings.js') }}"></script>
+{% endblock %}

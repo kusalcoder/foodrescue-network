@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found — FoodRescue Network{% endblock %}
+{% block content %}
+<div class="error-page" style="text-align:center; padding:80px 20px; max-width:600px; margin:0 auto;">
+  <h1 style="font-size:96px; margin:0; color:#2f7a4f;">404</h1>
+  <h2 style="margin-top:0;">Page not found</h2>
+  <p style="color:#666; margin-bottom:32px;">
+    The page you're looking for doesn't exist, or it may have moved.
+  </p>
+  <a href="{{ url_for('frontend.index') }}"
+     style="display:inline-block; padding:12px 28px; background:#2f7a4f; color:#fff; border-radius:6px; text-decoration:none; font-weight:600;">
+    Back to Home
+  </a>
+</div>
+{% endblock %}

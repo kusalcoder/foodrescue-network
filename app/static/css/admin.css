@@ -1,0 +1,92 @@
+/* FoodRescue Network — admin dashboard styles (Phase 11)
+ *
+ * New file, additive only — nothing here replaces base.css. Uses the
+ * app's existing CSS custom properties (--space-*, --color-*) where
+ * they're likely to exist, with plain fallback values via var(--x, Y)
+ * so these pages still look reasonable even if a variable name here
+ * doesn't match what base.css actually defines.
+ */
+
+.admin-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3, 1rem);
+  margin-bottom: var(--space-4, 1.5rem);
+  border-bottom: 1px solid var(--color-border, #e2e2e2);
+  padding-bottom: var(--space-2, 0.5rem);
+}
+.admin-subnav a {
+  text-decoration: none;
+  color: var(--color-text-muted, #555);
+  font-weight: 500;
+}
+.admin-subnav a.is-active,
+.admin-subnav a:hover {
+  color: var(--color-primary, #2f7a4f);
+}
+
+.admin-filters {
+  align-items: flex-end;
+  margin-bottom: var(--space-4, 1.5rem);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: var(--space-3, 1rem);
+}
+.data-table th,
+.data-table td {
+  text-align: left;
+  padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+  border-bottom: 1px solid var(--color-border, #e2e2e2);
+}
+.data-table thead th {
+  font-weight: 600;
+  color: var(--color-text-muted, #555);
+}
+
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 1rem);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+.badge--success { background: #e3f5e9; color: #1e7a3f; }
+.badge--muted   { background: #ececec; color: #666; }
+.badge--info    { background: #e6f0fb; color: #1a5aa6; }
+
+.btn--small { padding: 0.25rem 0.65rem; font-size: 0.9em; }
+
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3, 1rem);
+  margin-bottom: var(--space-4, 1.5rem);
+}
+.stat-card {
+  border: 1px solid var(--color-border, #e2e2e2);
+  border-radius: 8px;
+  padding: var(--space-3, 1rem);
+  text-align: center;
+}
+.stat-card__value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--color-primary, #2f7a4f);
+}
+.stat-card__label {
+  color: var(--color-text-muted, #555);
+  margin-top: 0.25rem;
+}
+
+.breakdown {
+  margin-bottom: var(--space-4, 1.5rem);
+}

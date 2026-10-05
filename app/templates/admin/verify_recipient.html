@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Recipient — FoodRescue Network{% endblock %}
+
+{% block content %}
+<div id="guest-notice" class="alert alert--info" hidden>
+  <a href="{{ url_for('frontend.login_page') }}">Log in</a> as an administrator to verify recipients.
+</div>
+
+<div id="wrong-role-notice" class="alert alert--info" hidden>
+  This page is for administrator accounts only.
+</div>
+
+<section class="auth-page" id="verify-page" hidden style="max-width: 520px;">
+  <h1>Verify a Recipient</h1>
+  <p class="text-muted">
+    A recipient organization can't request food until an administrator
+    verifies it. Ask the recipient for their <strong>Profile ID</strong>
+    (it's shown at the top of their own "My Profile" page) and enter it
+    below.
+  </p>
+
+  <div id="form-alert"></div>
+
+  <form id="verify-form" novalidate>
+    <div class="form-field">
+      <label for="profile-id">Recipient Profile ID</label>
+      <input type="number" id="profile-id" min="1" required>
+      <div class="field-error" data-error-for="profile-id"></div>
+    </div>
+    <button type="submit" class="btn btn--primary" id="submit-btn">Verify</button>
+  </form>
+
+  <div id="result-card" hidden></div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/admin-verify.js') }}"></script>
+{% endblock %}

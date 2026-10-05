@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Find Orphanages & Receivers — Help With Food{% endblock %}
+
+{% block content %}
+<section class="listings-page" data-page="recipients-directory">
+  <div class="listings-page__header">
+    <div>
+      <h1>Orphanages & Receiver Organizations</h1>
+      <p class="text-muted">Find registered orphanages, community kitchens, and shelters seeking food donations.</p>
+    </div>
+    <div>
+      <a href="{{ url_for('frontend.map_page') }}" class="btn btn--secondary">🗺️ View on Map</a>
+    </div>
+  </div>
+
+  <div class="search-hero">
+    <form id="recipient-search-form" class="search-hero-form" novalidate>
+      <div class="form-field">
+        <label for="recipient-search-input">Search Orphanages / Receivers</label>
+        <input type="search" id="recipient-search-input" placeholder="Search by orphanage name, shelter, or city…">
+      </div>
+      <div class="form-field" style="max-width: 200px;">
+        <label for="recipient-city-input">City</label>
+        <input type="text" id="recipient-city-input" placeholder="e.g. Springfield">
+      </div>
+      <div class="form-field" style="max-width: 180px;">
+        <label for="recipient-verified-filter">Status</label>
+        <select id="recipient-verified-filter">
+          <option value="false">All Registered</option>
+          <option value="true" selected>Verified Only</option>
+        </select>
+      </div>
+      <div class="search-btn-wrap">
+        <button type="submit" class="btn btn--primary">Search Orphanages</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="recipients-alert"></div>
+  <p id="recipients-loading" class="text-muted">Loading orphanages and receivers…</p>
+  <p id="recipients-empty" class="text-muted" hidden>No orphanages or receivers match your search.</p>
+
+  <div id="recipients-grid" class="cards listings-grid" hidden></div>
+
+  <div id="recipients-pagination" class="pagination" style="display: flex; justify-content: center; gap: var(--space-3); margin-top: var(--space-4);" hidden>
+    <button type="button" id="prev-page-btn" class="btn btn--secondary">← Previous</button>
+    <span id="page-indicator" style="align-self: center; font-weight: 500;">Page 1</span>
+    <button type="button" id="next-page-btn" class="btn btn--secondary">Next →</button>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/recipients-search.js') }}"></script>
+{% endblock %}
