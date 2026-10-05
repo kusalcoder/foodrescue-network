@@ -22,6 +22,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def _normalize_db_url(url: str | None) -> str | None:
+    if url and url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql://", 1)
+    return url
+
+
 class BaseConfig:
     """Shared configuration for every environment."""
 
@@ -33,7 +39,7 @@ class BaseConfig:
 
     # PostgreSQL connection string, e.g.:
     #   postgresql://username:password@localhost:5432/foodrescue_db
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
+    SQLALCHEMY_DATABASE_URI = _normalize_db_url(os.environ.get("DATABASE_URL"))
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # File upload settings (used starting in the optional file-upload
@@ -61,8 +67,8 @@ class TestingConfig(BaseConfig):
     separate test database so tests never touch real data."""
 
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "TEST_DATABASE_URL", BaseConfig.SQLALCHEMY_DATABASE_URI
+    SQLALCHEMY_DATABASE_URI = _normalize_db_url(
+        os.environ.get("TEST_DATABASE_URL", BaseConfig.SQLALCHEMY_DATABASE_URI)
     )
 
 
